@@ -1,0 +1,56 @@
+import os
+import uritools
+import re
+
+from .base import BaseResolver
+
+
+PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
+
+
+class FilesystemResolver(BaseResolver):
+
+    """
+    This is super hacky!  It should be replaced with a ShotgunResolver
+    rather than scraping the file system.  
+    Also variables other than version should eventually be supported.  
+    """
+
+    _name = 'filesystem'
+
+    @property
+    @classmethod
+    def name(cls):
+        return cls._name
+
+    @classmethod
+    def uri_to_filepath(cls, uri):
+
+        uri_tokens = uritools.urisplit(uri)
+        path = uri_tokens.getpath()
+
+        path_vars = re.findall(PATH_VAR_REGEX, path)
+
+        for var in path_vars:
+            if var not in ['$VERSION']:
+                continue
+            versions = os.listdir(os.path.split(path)[0])
+            version_ints = []
+
+            for version in versions:
+                version_str = re.findall(r'v[0-9]{3}', version)[0]
+                version_ints.append(int(version_str[1::]))
+
+            version_ints.sort()
+            latest = version_ints[-1]
+            latest_str = 'v%03d' % latest
+
+            path = path.replace('$VERSION', latest_str)
+  
+        return path
+
+    @classmethod
+    def filepath_to_uri(cls, filepath):
+        version = re.findall(r'v[0-9]{3}', filepath)[0]
+        return filepath.replace(version, '$VERSION')
+
