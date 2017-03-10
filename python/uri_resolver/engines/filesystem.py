@@ -25,7 +25,6 @@ class FilesystemResolver(BaseResolver):
 
     @classmethod
     def uri_to_filepath(cls, uri):
-
         uri_tokens = uritools.urisplit(uri)
         path = uri_tokens.getpath()
 
@@ -38,8 +37,12 @@ class FilesystemResolver(BaseResolver):
             version_ints = []
 
             for version in versions:
-                version_str = re.findall(r'v[0-9]{3}', version)[0]
-                version_ints.append(int(version_str[1::]))
+                try:
+                    version_str = re.findall(r'v[0-9]{3}', version)[0]
+                    version_ints.append(int(version_str[1::]))
+                except:
+                    continue
+
 
             version_ints.sort()
             latest = version_ints[-1]
@@ -50,7 +53,7 @@ class FilesystemResolver(BaseResolver):
         return path
 
     @classmethod
-    def filepath_to_uri(cls, filepath):
+    def filepath_to_uri(cls, filepath, scheme):
         version = re.findall(r'v[0-9]{3}', filepath)[0]
-        return filepath.replace(version, '$VERSION')
+        return "{0}:{1}".format(scheme, filepath.replace(version, '$VERSION'))
 
