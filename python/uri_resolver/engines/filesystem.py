@@ -66,6 +66,11 @@ class FilesystemResolver(BaseResolver):
 
     @classmethod
     def filepath_to_uri(cls, filepath, scheme):
-        version = re.findall(VERSION_REGEX, filepath)[0]
-        return "{0}:{1}".format(scheme, filepath.replace(version, '$VERSION'))
 
+        match = re.findall(VERSION_REGEX, filepath)
+
+        if not match:
+            return "{0}:{1}".format(scheme, filepath)
+
+        version = match[0]
+        return "{0}:{1}".format(scheme, filepath.replace(version, '$VERSION'))
