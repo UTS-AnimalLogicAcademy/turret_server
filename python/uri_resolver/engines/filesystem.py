@@ -1,5 +1,6 @@
 import os
-import uritools
+from urlparse import urlparse
+# import uritools
 import re
 
 from .base import BaseResolver
@@ -26,8 +27,8 @@ class FilesystemResolver(BaseResolver):
     @classmethod
     def uri_to_filepath(cls, uri):
 
-        uri_tokens = uritools.urisplit(uri)
-        path = uri_tokens.getpath()
+        uri_tokens = urlparse(uri)
+        path = uri_tokens.path
         path_vars = re.findall(PATH_VAR_REGEX, path)
 
         for var in path_vars:

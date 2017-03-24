@@ -2,11 +2,9 @@
 
 name = 'uri_resolver'
 
-version = '0.0.3'
+version = '0.0.4'
 
 authors = ['daniel.flood']
-
-requires = ['uritools']
 
 build_requires = ['python']
 

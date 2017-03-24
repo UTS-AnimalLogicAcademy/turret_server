@@ -1,10 +1,10 @@
-import uritools
+from urlparse import urlparse
 
 import engines
 
 
 def uri_to_filepath(uri):
-    tokens = uritools.urisplit(uri)
+    tokens = urlparse(uri)
     scheme = tokens.scheme
     engine = _get_engine(scheme)
     return engine.uri_to_filepath(uri)
