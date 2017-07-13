@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # bar
+# bar
 
 name = 'uri_resolver'
 
