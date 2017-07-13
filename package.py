@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # foo
 # bar
+# foo
 
 name = 'uri_resolver'
 
