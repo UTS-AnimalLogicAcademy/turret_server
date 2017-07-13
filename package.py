@@ -4,6 +4,7 @@
 # foo
 # bar
 # foo
+# bar
 
 name = 'uri_resolver'
 
