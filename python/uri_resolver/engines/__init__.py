@@ -1,4 +1,6 @@
 from .filesystem import FilesystemResolver
+from .tank_ import TankResolver
 
 
-registered = {'filesystem': FilesystemResolver}
+registered = {'filesystem': FilesystemResolver,
+              'tank': TankResolver}

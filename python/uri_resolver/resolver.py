@@ -18,5 +18,5 @@ def filepath_to_uri(filepath, scheme):
 def _get_engine(name):
     engine = engines.registered.get(name)
     if not engine:
-        raise RuntimeError("Engin %s was not registered" % name)
+        raise RuntimeError("Engine %s was not registered" % name)
     return engine

@@ -9,6 +9,9 @@ from .base import BaseResolver
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
 
+WINDOWS_PROJ_ROOT = "A:/jobs"
+LINUX_PROJ_ROOT = "/mnt/ala/jobs"
+
 class FilesystemResolver(BaseResolver):
 
     """
@@ -62,7 +65,21 @@ class FilesystemResolver(BaseResolver):
 
             path = path.replace('$VERSION', latest_str)
 
+        if path.startswith('$PROJ_ROOT'):
+            if os.name == 'posix':
+                path = path.replace('$PROJ_ROOT', LINUX_PROJ_ROOT)
+            if os.name == 'nt':
+                path = path.replace('$PROJ_ROOT', WINDOWS_PROJ_ROOT)
+
         return path
+
+    # "filesystem:/mnt/ala/jobs/s171/assets/Prop/machineDebri003/model/publish/caches/machineDebri003.$VERSION.abc"
+    # "filesystem:$PROJ_ROOT/s171/assets/Prop/machineDebri003/model/publish/caches/machineDebri003.$VERSION.abc"
+
+    @classmethod
+    def validate(self, uri):
+        # no validation for now - should probably check that the pardir path exists?
+        pass
 
     @classmethod
     def filepath_to_uri(cls, filepath, scheme):
