@@ -7,14 +7,16 @@ sys.path.insert(0, '../')
 
 from uri_resolver import resolver
 
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://*:5555")
+def createServer():
 
-while True:
+    #initalise server
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    socket.bind("tcp://*:5555")
 
-    message = socket.recv()
-    print("Received request: %s" % message)
-    filepath = resolver.uri_to_filepath(message)
-
-    socket.send(filepath)
+    #Listen for client requests
+    while True:
+        message = socket.recv()
+        print("Received request: %s" % message)
+        filepath = resolver.uri_to_filepath(message)
+        socket.send(filepath)
