@@ -2,6 +2,9 @@ import urllib
 from urlparse import urlparse
 from .base import BaseResolver
 
+import sys
+sys.path.append('/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python')
+
 import sgtk
 
 
@@ -55,7 +58,8 @@ class TankResolver(BaseResolver):
         version = fields.get('version')
 
         eng = sgtk.platform.current_engine()
-        tk = eng.tank
+        #tk = eng.tank
+        tk = sgtk.tank_from_path("/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python")
         template_path = tk.templates[template]
 
         if version == 'latest':
