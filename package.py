@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
-# foo
-# bar
-# foo
-# bar
-# foo
-# bar
-
 name = 'uri_resolver'
 
 version = '0.0.6'
 
 authors = ['daniel.flood']
 
+requires = ['pyzmq']
+
 build_requires = ['python']
-# not sure how to capture "tank" dependency?  i.e. not a rez package?
 
 def commands():
     env.PYTHONPATH.append('{this.root}/python')

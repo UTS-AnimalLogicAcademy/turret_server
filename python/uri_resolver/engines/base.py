@@ -14,7 +14,7 @@ class BaseResolver(object):
         pass
 
     @abstractmethod
-    def filepath_to_uri(self, filepath, scheme):
+    def filepath_to_uri(self, filepath):
         pass
 
     @abstractmethod
