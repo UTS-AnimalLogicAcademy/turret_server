@@ -1,8 +1,7 @@
 import zmq
 
-context = zmq.Context()
-
 def createClient():
+    context = zmq.Context()
     #  Socket to talk to server
     print("Connecting to uri resolver server...")
     socket = context.socket(zmq.REQ)
@@ -22,3 +21,5 @@ def createClient():
     receivedPath = socket.recv()
 
     print("Received: %s" % receivedPath)
+
+createClient()

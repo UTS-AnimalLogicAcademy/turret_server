@@ -20,3 +20,5 @@ def createServer():
         print("Received request: %s" % message)
         filepath = resolver.uri_to_filepath(message)
         socket.send(filepath)
+
+createServer()
