@@ -2,15 +2,12 @@ import urllib
 from urlparse import urlparse
 from .base import BaseResolver
 
-import tank
+import sgtk
 
 
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
-TANK_ROOT = '/mnt/ala/jobs'
 
-#todo: get the project context from tank somehow...
-PROJ = 's171'
 
 class TankResolver(BaseResolver):
 
@@ -19,7 +16,7 @@ class TankResolver(BaseResolver):
     rather than scraping the file system.
     Also variables other than version should eventually be supported.
     """
-    _name = 'filesystem'
+    _name = 'tank'
 
     @property
     @classmethod
@@ -31,25 +28,35 @@ class TankResolver(BaseResolver):
 
     @classmethod
     def uri_to_filepath(cls, uri):
+        """
+        uri: "tank:/maya_publish_asset_cache_usd?Step=model&Task=model&asset_type=setPiece&version=latest&Asset=building01"
+
+        returns filepath: "/mnt/ala/mav/2018/jobs/s118/assets/setPiece/building01/model/model/caches/usd/building01_model_model_usd.v028.usd"
+        """
+
+        # this is necessary for katana - for some reason katana ships with it's own
+        # mangled version of urlparse which only works for some protocols, super annoying
         if uri.startswith('tank://'):
-            uri.replace('tank://', 'tank:/')
+            uri = uri.replace('tank://', 'http:/')
+        elif uri.startswith('tank:/'):
+            uri = uri.replace('tank:/', 'http:/')
 
         uri_tokens = urlparse(uri)
         query = uri_tokens.query
         path_tokens = uri_tokens.path.split('/')
-        job = path_tokens[1]
-        template = path_tokens[2]
+        template = path_tokens[1]
         query_tokens = query.split('&')
         fields = {}
-
-        tk = tank.tank_from_path('%s/%s' % (TANK_ROOT, job))
-        template_path = tk.templates[template]
 
         for field in query_tokens:
             key, value = field.split('=')
             fields[key] = value
 
         version = fields.get('version')
+
+        eng = sgtk.platform.current_engine()
+        tk = eng.tank
+        template_path = tk.templates[template]
 
         if version == 'latest':
             fields_ = {}
@@ -69,24 +76,29 @@ class TankResolver(BaseResolver):
         if publish:
             return publish[0]
 
-
     @classmethod
-    def filepath_to_uri(cls, filepath, scheme):
-        tk = tank.tank_from_path("%s/%s" % (TANK_ROOT, PROJ))
+    def filepath_to_uri(cls, filepath, version_flag="latest"):
+        """
+        filepath: "/mnt/ala/mav/2018/jobs/s118/assets/setPiece/building01/model/model/caches/usd/building01_model_model_usd.v028.usd"
+
+        returns uri: "tank:/maya_publish_asset_cache_usd?Step=model&Task=model&asset_type=setPiece&version=latest&Asset=building01"
+        """
+        eng = sgtk.platform.current_engine()
+        tk = eng.tank
         templ = tk.template_from_path(filepath)
 
         if not templ:
             return
 
         fields = templ.get_fields(filepath)
-        fields['version'] = 'latest'
-        query = urllib.urlencode(fields)
-        uri = 'tank:/%s/%s?%s' % (PROJ, templ.name, query)
+        fields['version'] = version_flag
 
+        print fields
+        query = urllib.urlencode(fields)
+        uri = '%s:/%s?%s' % (cls._name, templ.name, query)
         return uri
 
-
-def is_tank_asset(filepath):
-    tk = tank.tank_from_path("%s/%s" % (TANK_ROOT, PROJ))
-    templ = tk.template_from_path(filepath)
-    return True if templ else False
+    @staticmethod
+    def is_tank_asset(filepath, tk):
+        templ = tk.template_from_path(filepath)
+        return True if templ else False
