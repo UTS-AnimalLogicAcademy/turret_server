@@ -12,7 +12,7 @@ def uri_to_filepath(uri):
 
 def filepath_to_uri(filepath, scheme):
     engine = _get_engine(scheme)
-    return engine.filepath_to_uri(filepath, scheme)
+    return engine.filepath_to_uri(filepath)
 
 
 def _get_engine(name):
