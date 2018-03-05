@@ -1,6 +1,10 @@
 
 import time
 import zmq
+
+import sys
+sys.path.insert(0, '../')
+
 from uri_resolver import resolver
 
 context = zmq.Context()
