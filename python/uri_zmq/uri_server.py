@@ -26,13 +26,21 @@ def createServer():
     # Listen for client requests
     while SERVER_RUNNING:
         message = socket.recv()
-        filepath = resolver.uri_to_filepath(message)
+        if (inputCheck(message)):                                                      #if sent query is wrong pattern/does not exist
+            socket.send("INCORRECT") #send error message
+        else:
+            filepath = resolver.uri_to_filepath(message)
+            print("Handled request %s -> %s" % (message, filepath))
+            socket.send(filepath)
 
-        print("Handled request %s -> %s" % (message, filepath))
-        socket.send(filepath)
-
-    # Clsoe server 
+    # Close server
     socket.close()
+
+def inputCheck(message):
+    if (message == "HELLO"):
+        print "HELLO"
+        return True
+    return False
 
 def closeServer():
     global SERVER_RUNNING

@@ -7,7 +7,6 @@ sys.path.append('/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/
 
 import sgtk
 
-
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
 
@@ -56,6 +55,13 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
+        print version
+        test = fields.get('Asset')
+        print test
+
+        if (test == "building30"):
+            return  ""
+
 
         eng = sgtk.platform.current_engine()
         #tk = eng.tank
@@ -71,6 +77,10 @@ class TankResolver(BaseResolver):
 
             publishes = tk.paths_from_template(template_path, fields_)
             versions = [template_path.get_fields(x).get('version') for x in publishes]
+            print versions
+            if not versions:                                                                                        #if version doesnt exist -> works if asset name
+                return "INVALID INPUT"
+
             versions.sort()
             latest = versions[-1]
             fields["version"] = latest
