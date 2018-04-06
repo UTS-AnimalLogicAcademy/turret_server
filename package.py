@@ -5,12 +5,16 @@ version = '0.0.8'
 
 authors = ['daniel.flood']
 
+tools = ['start_uri_server']
+
 requires = ['pyzmq']
 
 build_requires = ['python']
 
 def commands():
-    env.PYTHONPATH.append('{this.root}/python')
+    env.PYTHONPATH.append('{root}/python')
+    env.PATH.append('{root}/bin')
+    
 
 uuid = '521166cd-725a-402c-a424-e68d24c448fc'
 

@@ -6,76 +6,87 @@ import sys
 import threading
 
 import sys
-sys.path.insert(0, '../')
+#sys.path.insert(0, './python/')
 
 from uri_resolver import resolver
 
 ZMQ_PORT = 5555
 SERVER_RUNNING = False
 
-def createServer():
+class uri_resolver_exception(Exception):
+    pass
 
-    # Initalize server
+def launchServer():
+
+    # Create ZMQ context
     context = zmq.Context()
-    socket = context.socket(zmq.REP)
-    socket.bind("tcp://*:%s" % ZMQ_PORT)
+
+    # Create open socket
+    try:
+        socket = context.socket(zmq.REP)
+        socket.bind("tcp://*:%s" % ZMQ_PORT)
+        print("Opened ZMQ Server!")
+    except zmq.error.ZMQError:
+
+        # Debug Log
+        raise uri_resolver_exception("Address already in use!")
+
+        # Early exit, address already in use
+        return
 
     global SERVER_RUNNING
     SERVER_RUNNING = True
 
     # Listen for client requests
-    while SERVER_RUNNING:
-        message = socket.recv()
-        if (inputCheck(message)):                                                      #if sent query is wrong pattern/does not exist
-            socket.send("INCORRECT") #send error message
-        else:
+    try:
+        print("ZMQ Server listening!")
+        while SERVER_RUNNING:
+            # Wait for next message
+            message = socket.recv()
+
+            print("Received message: %s" % message)
+
+            # Convert incoming sgtk template to absolute path
             filepath = resolver.uri_to_filepath(message)
-            print("Handled request %s -> %s" % (message, filepath))
+
+            #filepath = filepath.encode('utf-8')
+
+            filepath += '\0'
+
+            print("Resolved path: %s" % filepath)
+            
+            # Send back resolved path
             socket.send(filepath)
+
+            # Debug Log
+            print("Handled request %s -> %s" % (message, filepath))
+    except KeyboardInterrupt:
+        raise uri_resolver_exception("Keyboard has interrupted server!")
+    except Exception as e:
+        print("Caught exception: [%s]" % e)
+    #except TypeError as e:
+    #    print("Caught type error [%s]" % str(e))
+    #except ValueError as e:
+    #    print("Caught value error [%s]" % str(e))
+    #except IndexError as e:
+    #    print("Caught index error [%s]" % str(e))
 
     # Close server
     socket.close()
 
-def inputCheck(message):
-    if (message == "HELLO"):
-        print "HELLO"
-        return True
-    return False
+    print("Closed ZMQ Server!")
 
-def closeServer():
-    global SERVER_RUNNING
-    SERVER_RUNNING = False
-    server.join()
+# Handle server loop to restart when failure
+def StartServerManager():
+    print("Starting Server Manager!")
 
-class ServerTask(threading.Thread):
-    """ServerTask"""
-    def __init__(self):
-        threading.Thread.__init__ (self)
-
-    def run(self):
-        context = zmq.Context()
-        frontend = context.socket(zmq.REP)
-        frontend.bind('tcp://*:5525')
-
-        global SERVER_RUNNING
-        SERVER_RUNNING = True
-
-        while SERVER_RUNNING:
-            message = frontend.recv()
-            filepath = resolver.uri_to_filepath(message)
-
-            print("Handled request %s -> %s" % (message, filepath))
-            frontend.send(filepath)
-
-        frontend.close()
-        context.term()
-
-
-#server = ServerTask()
-#server.start()
-#server.join()
-
-createServer()
-#s = raw_input()
-#if s:
-    #closeServer()
+    shouldServerRestart = True
+    try: 
+        while (shouldServerRestart):
+            print(" - Launching server!")
+            launchServer()
+    except uri_resolver_exception as e:
+        print("Server manager has caught exception: [%s]" % str(e))
+    print("Stopping Server Manager!")
+    
+StartServerManager()
