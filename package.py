@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 name = 'uri_resolver'
 
-version = '0.0.9'
+version = '0.0.10'
 
-authors = ['daniel.flood']
+authors = ['daniel.flood',
+           'ben.skinner']
 
 tools = ['start_uri_server']
 
@@ -13,6 +14,7 @@ build_requires = ['python']
 
 def commands():
     env.PYTHONPATH.append('{root}/python')
+    env.URI_SERVER = '{root}/python/uri_zmq'
     env.PATH.append('{root}/bin')
     
 

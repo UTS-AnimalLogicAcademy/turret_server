@@ -1,1 +1,1 @@
-python python/uri_zmq/uri_server.py
+python $URI_SERVER/uri_server.py
