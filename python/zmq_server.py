@@ -56,11 +56,9 @@ def launchServer():
 
             #If the path cannot be resolved, show dialog warning
             if (filepath == "NOT_FOUND"):
-                print "HERE"
                 root = Tkinter.Tk()
                 root.update()
                 root.withdraw()
-                root.option_add("*Font", "arial")
                 tkMessageBox.showwarning("Warning","The path: \n %s \ncannot be resolved" % message)
                 root.update()
             else:
