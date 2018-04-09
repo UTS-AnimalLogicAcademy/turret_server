@@ -89,9 +89,11 @@ class TankResolver(BaseResolver):
             if(version.isdigit()):
                 if(int(version) in versions):
                     latest = version
+                else:
+                    return "NOT_FOUND"
             else:
                 latest = versions[-1]
-                
+
 
             fields["version"] = int(latest)
             print(fields)
