@@ -11,12 +11,3 @@ rez_install_python(
 	LOCAL_SYMLINK
 )
 
-
-FILE(GLOB_RECURSE all_files "bin/*")
-
-rez_install_files(
-    ${all_files}
-    DESTINATION
-    .
-    LOCAL_SYMLINK
-)
