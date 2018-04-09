@@ -79,7 +79,7 @@ class TankResolver(BaseResolver):
             assets = [template_path.get_fields(x).get('Asset') for x in publishes]
             print(assets)
             if(len(assets) == 0):
-                return ""
+                return "NOT_FOUND"
 
             versions.sort()
 
