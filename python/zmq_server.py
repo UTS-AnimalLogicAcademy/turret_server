@@ -5,6 +5,9 @@ import zmq
 import sys
 import threading
 
+import Tkinter
+import tkMessageBox
+
 import sys
 #sys.path.insert(0, './python/')
 
@@ -51,15 +54,24 @@ def launchServer():
 
             #filepath = filepath.encode('utf-8')
 
-            filepath += '\0'
+            #If the path cannot be resolved, show dialog warning
+            if (filepath == "NOT_FOUND"):
+                print "HERE"
+                root = Tkinter.Tk()
+                root.update()
+                root.withdraw()
+                root.option_add("*Font", "arial")
+                tkMessageBox.showwarning("Warning","The path: \n %s \ncannot be resolved" % message)
+                root.update()
+            else:
+                print("Resolved path: %s" % filepath)
 
-            print("Resolved path: %s" % filepath)
-            
             # Send back resolved path
+            filepath += '\0'
             socket.send(filepath)
-
             # Debug Log
             print("Handled request %s -> %s" % (message, filepath))
+
     except KeyboardInterrupt:
         raise uri_resolver_exception("Keyboard has interrupted server!")
     except Exception as e:
@@ -81,12 +93,12 @@ def StartServerManager():
     print("Starting Server Manager!")
 
     shouldServerRestart = True
-    try: 
+    try:
         while (shouldServerRestart):
             print(" - Launching server!")
             launchServer()
     except uri_resolver_exception as e:
         print("Server manager has caught exception: [%s]" % str(e))
     print("Stopping Server Manager!")
-    
+
 StartServerManager()
