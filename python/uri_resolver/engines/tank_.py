@@ -2,8 +2,10 @@ import urllib
 from urlparse import urlparse
 from .base import BaseResolver
 
-import sgtk
+import sys
+sys.path.append('/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python')
 
+import sgtk
 
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
@@ -53,12 +55,18 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
+        #print version
+        test = fields.get('Asset')
+        #print test
 
         eng = sgtk.platform.current_engine()
-        tk = eng.tank
+        #tk = eng.tank
+        tk = sgtk.tank_from_path("/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python")
         template_path = tk.templates[template]
 
-        if version == 'latest':
+        print(" ---- %s" % template_path)
+
+        if version:
             fields_ = {}
             for key in fields:
                 if key == 'version':
@@ -67,9 +75,26 @@ class TankResolver(BaseResolver):
 
             publishes = tk.paths_from_template(template_path, fields_)
             versions = [template_path.get_fields(x).get('version') for x in publishes]
+
+            assets = [template_path.get_fields(x).get('Asset') for x in publishes]
+            print(assets)
+            if(len(assets) == 0):
+                return ""
+
             versions.sort()
-            latest = versions[-1]
-            fields["version"] = latest
+
+            print("Versions found: %s" % str(versions))
+            #if not versions:                                                                                        #if version doesnt exist -> works if asset name
+            #    return "INVALID INPUT"
+            if(version.isdigit()):
+                if(int(version) in versions):
+                    latest = version
+            else:
+                latest = versions[-1]
+                
+
+            fields["version"] = int(latest)
+            print(fields)
 
         publish = tk.paths_from_template(template_path, fields)
 
@@ -93,7 +118,7 @@ class TankResolver(BaseResolver):
         fields = templ.get_fields(filepath)
         fields['version'] = version_flag
 
-        print fields
+        #print fields
         query = urllib.urlencode(fields)
         uri = '%s:/%s?%s' % (cls._name, templ.name, query)
         return uri
