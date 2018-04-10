@@ -58,7 +58,7 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
-        time = fields.get('time')
+        asset_time = fields.get('time')
 
         # avoid hardcoding path, but requires us to be in a sg context::
         # eng = sgtk.platform.current_engine()
@@ -84,14 +84,14 @@ class TankResolver(BaseResolver):
 
             publishes.sort()
 
-            if time:
-                time = float(time)
+            if asset_time:
+                asset_time = float(asset_time)
                 while len(publishes) > 0:
                     latest = publishes.pop()
                     latest_time = os.path.getmtime(latest)
 
                     # handle rounding issues - apparently this happens:
-                    if (abs(latest_time - time) < 0.01) or (latest_time < time):
+                    if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
                         return latest
 
                 return ZMQ_NULL_RESULT
