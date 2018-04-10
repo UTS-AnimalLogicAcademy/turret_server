@@ -1,4 +1,6 @@
 import urllib
+import os
+
 from urlparse import urlparse
 from .base import BaseResolver
 
@@ -55,9 +57,13 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
+<<<<<<< Updated upstream
         #print version
         test = fields.get('Asset')
         #print test
+=======
+        time = fields.get('time')
+>>>>>>> Stashed changes
 
         eng = sgtk.platform.current_engine()
         #tk = eng.tank
@@ -74,6 +80,7 @@ class TankResolver(BaseResolver):
                 fields_[key] = fields[key]
 
             publishes = tk.paths_from_template(template_path, fields_)
+<<<<<<< Updated upstream
             versions = [template_path.get_fields(x).get('version') for x in publishes]
 
             assets = [template_path.get_fields(x).get('Asset') for x in publishes]
@@ -97,11 +104,28 @@ class TankResolver(BaseResolver):
 
             fields["version"] = int(latest)
             print(fields)
+=======
+            if len(publishes) == 0:
+                return None
 
-        publish = tk.paths_from_template(template_path, fields)
+            publishes.sort()
 
-        if publish:
-            return publish[0]
+            if time:
+                time = float(time)
+                while len(publishes) > 0:
+                    latest = publishes.pop()
+                    latest_time = os.path.getmtime(latest)
+
+                    # handle rounding issues - apparently this happens:
+                    if (abs(latest_time - time) < 0.01) or (latest_time < time):
+                        return latest
+
+                return None
+>>>>>>> Stashed changes
+
+            else:
+                return publishes[-1]
+
 
     @classmethod
     def filepath_to_uri(cls, filepath, version_flag="latest"):
