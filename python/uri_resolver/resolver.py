@@ -11,6 +11,7 @@ def uri_to_filepath(uri):
 
 
 def filepath_to_uri(filepath, scheme):
+    print("Received filepath: %s" % filepath)
     engine = _get_engine(scheme)
     return engine.filepath_to_uri(filepath)
 
