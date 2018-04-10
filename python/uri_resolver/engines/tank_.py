@@ -11,6 +11,7 @@ import sgtk
 
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
+ZMQ_NULL_RESULT = "NOT_FOUND"
 
 
 class TankResolver(BaseResolver):
@@ -57,19 +58,16 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
-<<<<<<< Updated upstream
-        #print version
-        test = fields.get('Asset')
-        #print test
-=======
         time = fields.get('time')
->>>>>>> Stashed changes
 
-        eng = sgtk.platform.current_engine()
-        #tk = eng.tank
+        # avoid hardcoding path, but requires us to be in a sg context::
+        # eng = sgtk.platform.current_engine()
+        # tk = eng.tank
+
+        # hard code path - works anywhere:
         tk = sgtk.tank_from_path("/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python")
-        template_path = tk.templates[template]
 
+        template_path = tk.templates[template]
         print(" ---- %s" % template_path)
 
         if version:
@@ -80,33 +78,9 @@ class TankResolver(BaseResolver):
                 fields_[key] = fields[key]
 
             publishes = tk.paths_from_template(template_path, fields_)
-<<<<<<< Updated upstream
-            versions = [template_path.get_fields(x).get('version') for x in publishes]
 
-            assets = [template_path.get_fields(x).get('Asset') for x in publishes]
-            print(assets)
-            if(len(assets) == 0):
-                return "NOT_FOUND"
-
-            versions.sort()
-
-            print("Versions found: %s" % str(versions))
-            #if not versions:                                                                                        #if version doesnt exist -> works if asset name
-            #    return "INVALID INPUT"
-            if(version.isdigit()):
-                if(int(version) in versions):
-                    latest = version
-                else:
-                    return "NOT_FOUND"
-            else:
-                latest = versions[-1]
-
-
-            fields["version"] = int(latest)
-            print(fields)
-=======
             if len(publishes) == 0:
-                return None
+                return ZMQ_NULL_RESULT
 
             publishes.sort()
 
@@ -120,8 +94,7 @@ class TankResolver(BaseResolver):
                     if (abs(latest_time - time) < 0.01) or (latest_time < time):
                         return latest
 
-                return None
->>>>>>> Stashed changes
+                return ZMQ_NULL_RESULT
 
             else:
                 return publishes[-1]
