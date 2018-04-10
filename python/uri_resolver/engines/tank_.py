@@ -1,4 +1,6 @@
 import urllib
+import os
+
 from urlparse import urlparse
 from .base import BaseResolver
 
@@ -9,6 +11,7 @@ import sgtk
 
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
+ZMQ_NULL_RESULT = "NOT_FOUND"
 
 
 class TankResolver(BaseResolver):
@@ -55,15 +58,16 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
-        #print version
-        test = fields.get('Asset')
-        #print test
+        time = fields.get('time')
 
-        eng = sgtk.platform.current_engine()
-        #tk = eng.tank
+        # avoid hardcoding path, but requires us to be in a sg context::
+        # eng = sgtk.platform.current_engine()
+        # tk = eng.tank
+
+        # hard code path - works anywhere:
         tk = sgtk.tank_from_path("/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python")
-        template_path = tk.templates[template]
 
+        template_path = tk.templates[template]
         print(" ---- %s" % template_path)
 
         if version:
@@ -74,34 +78,27 @@ class TankResolver(BaseResolver):
                 fields_[key] = fields[key]
 
             publishes = tk.paths_from_template(template_path, fields_)
-            versions = [template_path.get_fields(x).get('version') for x in publishes]
 
-            assets = [template_path.get_fields(x).get('Asset') for x in publishes]
-            print(assets)
-            if(len(assets) == 0):
-                return "NOT_FOUND"
+            if len(publishes) == 0:
+                return ZMQ_NULL_RESULT
 
-            versions.sort()
+            publishes.sort()
 
-            print("Versions found: %s" % str(versions))
-            #if not versions:                                                                                        #if version doesnt exist -> works if asset name
-            #    return "INVALID INPUT"
-            if(version.isdigit()):
-                if(int(version) in versions):
-                    latest = version
-                else:
-                    return "NOT_FOUND"
+            if time:
+                time = float(time)
+                while len(publishes) > 0:
+                    latest = publishes.pop()
+                    latest_time = os.path.getmtime(latest)
+
+                    # handle rounding issues - apparently this happens:
+                    if (abs(latest_time - time) < 0.01) or (latest_time < time):
+                        return latest
+
+                return ZMQ_NULL_RESULT
+
             else:
-                latest = versions[-1]
+                return publishes[-1]
 
-
-            fields["version"] = int(latest)
-            print(fields)
-
-        publish = tk.paths_from_template(template_path, fields)
-
-        if publish:
-            return publish[0]
 
     @classmethod
     def filepath_to_uri(cls, filepath, version_flag="latest"):
