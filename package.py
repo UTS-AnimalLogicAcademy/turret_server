@@ -6,7 +6,7 @@ version = '0.0.2'
 authors = ['wen.tan',
            'ben.skinner']
 
-tools = ['start_uri_server']
+tools = ['start_zmq_server']
 
 requires = ['pyzmq',
             'uri_resolver']
