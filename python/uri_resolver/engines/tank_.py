@@ -79,7 +79,7 @@ class TankResolver(BaseResolver):
             assets = [template_path.get_fields(x).get('Asset') for x in publishes]
             print(assets)
             if(len(assets) == 0):
-                return ""
+                return "NOT_FOUND"
 
             versions.sort()
 
@@ -89,9 +89,11 @@ class TankResolver(BaseResolver):
             if(version.isdigit()):
                 if(int(version) in versions):
                     latest = version
+                else:
+                    return "NOT_FOUND"
             else:
                 latest = versions[-1]
-                
+
 
             fields["version"] = int(latest)
             print(fields)
