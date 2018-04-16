@@ -28,11 +28,11 @@ def launchServer():
     try:
         socket = context.socket(zmq.REP)
         socket.bind("tcp://*:%s" % ZMQ_PORT)
-        print("Opened ZMQ Server!")
+        print("Opened ZMQ Server.")
     except zmq.error.ZMQError:
 
         # Debug Log
-        raise uri_resolver_exception("Address already in use!")
+        raise uri_resolver_exception("Address already in use.")
 
         # Early exit, address already in use
         return
@@ -42,7 +42,7 @@ def launchServer():
 
     # Listen for client requests
     try:
-        print("ZMQ Server listening!")
+        print("ZMQ Server listening.")
         while SERVER_RUNNING:
             # Wait for next message
             message = socket.recv()
@@ -71,7 +71,7 @@ def launchServer():
             print("Handled request %s -> %s" % (message, filepath))
 
     except KeyboardInterrupt:
-        raise uri_resolver_exception("Keyboard has interrupted server!")
+        raise uri_resolver_exception("Keyboard has interrupted server.")
     except Exception as e:
         print("Caught exception: [%s]" % e)
     #except TypeError as e:
@@ -84,19 +84,19 @@ def launchServer():
     # Close server
     socket.close()
 
-    print("Closed ZMQ Server!")
+    print("Closed ZMQ Server.")
 
 # Handle server loop to restart when failure
 def StartServerManager():
-    print("Starting Server Manager!")
+    print("Starting Server Manager.")
 
     shouldServerRestart = True
     try:
         while (shouldServerRestart):
-            print(" - Launching server!")
+            print(" - Launching server.")
             launchServer()
     except uri_resolver_exception as e:
         print("Server manager has caught exception: [%s]" % str(e))
-    print("Stopping Server Manager!")
+    print("Stopping Server Manager.")
 
 StartServerManager()
