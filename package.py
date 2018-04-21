@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 name = 'zmq_server'
 
-version = '0.0.5'
+version = '0.0.6'
 
 authors = ['wen.tan',
            'ben.skinner']
@@ -13,8 +13,7 @@ build_requires = ['python']
 
 def commands():
     env.PYTHONPATH.append('{root}/python')
-    env.PATH.append('{root}/python')
-    env.PATH.append('{root}/bin')
+    env.PATH.append('{root}/bin:{root}/python')
     env.TANK_ZMQ_SERVER.set('{root}/bin/launch_zmq_server.sh')
 
 uuid = '3f17be78-3dd3-4a36-879c-0cf898e088ea'
