@@ -15,7 +15,6 @@ def commands():
     env.PYTHONPATH.append('{root}/python')
     env.PATH.append('{root}/python')
     env.PATH.append('{root}/bin')
-#    env.TANK_ZMQ_SERVER.set('{root}/python/zmq_server.py')
     env.TANK_ZMQ_SERVER.set('{root}/bin/launch_zmq_server.sh')
 
 uuid = '3f17be78-3dd3-4a36-879c-0cf898e088ea'
