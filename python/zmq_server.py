@@ -1,23 +1,50 @@
+#! /usr/bin/python
 
+import os
+import logging
 import time
-import zmq
-
 import sys
 import threading
-
 import Tkinter
 import tkMessageBox
-
 import sys
-#sys.path.insert(0, './python/')
+
+import zmq
 
 from uri_resolver import resolver
 
+
+ZMQ_LOG_LOCATION = '/tmp/tank_zmq_server/log'
 ZMQ_PORT = 5555
 SERVER_RUNNING = False
 
+
 class uri_resolver_exception(Exception):
     pass
+
+
+def getLogger():
+    try:
+        os.makedirs(ZMQ_LOG_LOCATION)
+    except OSError:
+        pass
+
+    localtime = time.localtime()
+    log_prefix = time.strftime('%d_%b_%Y_%H:%M:%S', localtime)
+    log_path = '%s/%s_tank_zmq.log' % (ZMQ_LOG_LOCATION, log_prefix)
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    handler = logging.FileHandler(log_path)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    return logger
+
 
 def launchServer():
 
@@ -32,7 +59,7 @@ def launchServer():
     except zmq.error.ZMQError:
 
         # Debug Log
-        raise uri_resolver_exception("Address already in use.")
+        raise uri_resolver_exception("ZMQ Server address already in use.")
 
         # Early exit, address already in use
         return
@@ -42,12 +69,14 @@ def launchServer():
 
     # Listen for client requests
     try:
-        print("ZMQ Server listening.")
+        logger = getLogger()
+
+        logger.info("ZMQ Server listening.")
         while SERVER_RUNNING:
             # Wait for next message
             message = socket.recv()
 
-            print("Received message: %s" % message)
+            logger.info("zmq server received message: %s" % message)
 
             # Convert incoming sgtk template to absolute path
             filepath = resolver.uri_to_filepath(message)
@@ -59,16 +88,16 @@ def launchServer():
                 root = Tkinter.Tk()
                 root.update()
                 root.withdraw()
-                tkMessageBox.showwarning("Warning","The path: \n %s \ncannot be resolved" % message)
+                tkMessageBox.showwarning("Warning", "The path: \n %s \ncannot be resolved" % message)
                 root.update()
             else:
-                print("Resolved path: %s" % filepath)
+                logger.info("zmq server resolved path: %s\n" % filepath)
 
             # Send back resolved path
             filepath += '\0'
             socket.send(filepath)
             # Debug Log
-            print("Handled request %s -> %s" % (message, filepath))
+            logger.info("zmq server handled request %s -> %s" % (message, filepath))
 
     except KeyboardInterrupt:
         raise uri_resolver_exception("Keyboard has interrupted server.")
@@ -85,6 +114,7 @@ def launchServer():
     socket.close()
 
     print("Closed ZMQ Server.")
+
 
 # Handle server loop to restart when failure
 def StartServerManager():
