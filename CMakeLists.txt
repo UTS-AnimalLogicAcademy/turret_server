@@ -8,6 +8,7 @@ rez_install_python(
 	FILES
 	${py_files}
 	DESTINATION .
+        EXECUTABLE
 	LOCAL_SYMLINK
 )
 
