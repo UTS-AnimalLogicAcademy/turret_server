@@ -82,8 +82,10 @@ def launchServer():
             filepath = resolver.uri_to_filepath(message)
 
             #filepath = filepath.encode('utf-8')
-
-            #If the path cannot be resolved, show dialog warning
+            '''
+            # Will send garbage to client when loading sets, forgo popup for now
+            
+            # If the path cannot be resolved, show dialog warning
             if (filepath == "NOT_FOUND"):
                 root = Tkinter.Tk()
                 root.update()
@@ -92,6 +94,9 @@ def launchServer():
                 root.update()
             else:
                 logger.info("zmq server resolved path: %s\n" % filepath)
+            '''
+            
+            logger.info("zmq server resolved path: %s\n" % filepath)
 
             # Send back resolved path
             filepath += '\0'
