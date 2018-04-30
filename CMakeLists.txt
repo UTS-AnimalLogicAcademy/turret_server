@@ -11,4 +11,3 @@ rez_install_python(
 	LOCAL_SYMLINK
 )
 
-

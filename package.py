@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 name = 'uri_resolver'
 
-version = '0.0.10'
+version = '0.0.14'
 
-authors = ['daniel.flood', 
+authors = ['daniel.flood',
            'ben.skinner']
-
-requires = ['pyzmq']
 
 build_requires = ['python']
 
 def commands():
-    env.PYTHONPATH.append('{this.root}/python')
+    env.PYTHONPATH.append('{root}/python')
 
 uuid = '521166cd-725a-402c-a424-e68d24c448fc'
 

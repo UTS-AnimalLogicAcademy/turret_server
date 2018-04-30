@@ -1,4 +1,6 @@
 import urllib
+import os
+
 from urlparse import urlparse
 from .base import BaseResolver
 
@@ -9,6 +11,8 @@ import sgtk
 
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
+ZMQ_NULL_RESULT = "NOT_FOUND"
+VERBOSE = True
 
 
 class TankResolver(BaseResolver):
@@ -36,6 +40,8 @@ class TankResolver(BaseResolver):
         returns filepath: "/mnt/ala/mav/2018/jobs/s118/assets/setPiece/building01/model/model/caches/usd/building01_model_model_usd.v028.usd"
         """
 
+        print "uri resolver received: %s\n" % uri
+
         # this is necessary for katana - for some reason katana ships with it's own
         # mangled version of urlparse which only works for some protocols, super annoying
         if uri.startswith('tank://'):
@@ -55,16 +61,19 @@ class TankResolver(BaseResolver):
             fields[key] = value
 
         version = fields.get('version')
-        #print version
-        test = fields.get('Asset')
-        #print test
+        asset_time = fields.get('time')
 
-        eng = sgtk.platform.current_engine()
-        #tk = eng.tank
+        # avoid hardcoding path, but requires us to be in a sg context::
+        # eng = sgtk.platform.current_engine()
+        # tk = eng.tank
+
+        # hard code path - works anywhere:
         tk = sgtk.tank_from_path("/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python")
+
         template_path = tk.templates[template]
 
-        print(" ---- %s" % template_path)
+        if VERBOSE:
+            print("tank uri resolver found sgtk template: %s\n" % template_path)
 
         if version:
             fields_ = {}
@@ -74,32 +83,32 @@ class TankResolver(BaseResolver):
                 fields_[key] = fields[key]
 
             publishes = tk.paths_from_template(template_path, fields_)
-            versions = [template_path.get_fields(x).get('version') for x in publishes]
 
-            assets = [template_path.get_fields(x).get('Asset') for x in publishes]
-            print(assets)
-            if(len(assets) == 0):
-                return ""
+            if len(publishes) == 0:
+                return ZMQ_NULL_RESULT
 
-            versions.sort()
+            publishes.sort()
 
-            print("Versions found: %s" % str(versions))
-            #if not versions:                                                                                        #if version doesnt exist -> works if asset name
-            #    return "INVALID INPUT"
-            if(version.isdigit()):
-                if(int(version) in versions):
-                    latest = version
+            if VERBOSE:
+                print "tank uri resolver found publishes: %s\n" % publishes
+
+            if asset_time:
+                asset_time = float(asset_time)
+                while len(publishes) > 0:
+                    latest = publishes.pop()
+                    latest_time = os.path.getmtime(latest)
+
+                    # handle rounding issues - apparently this happens:
+                    if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
+                        return latest
+
+                print "tank uri resolver returning: %s\n" % ZMQ_NULL_RESULT
+                return ZMQ_NULL_RESULT
+
             else:
-                latest = versions[-1]
-                
+                print "tank uri resolver returning: %s\n" % publishes[-1]
+                return publishes[-1]
 
-            fields["version"] = int(latest)
-            print(fields)
-
-        publish = tk.paths_from_template(template_path, fields)
-
-        if publish:
-            return publish[0]
 
     @classmethod
     def filepath_to_uri(cls, filepath, version_flag="latest"):
@@ -118,19 +127,9 @@ class TankResolver(BaseResolver):
         fields = templ.get_fields(filepath)
         fields['version'] = version_flag
 
-        uri = fields_to_uri(templ.name, fields)
-
-        return uri
-
-    @classmethod
-    def fields_to_uri(cls, templ_name, fields):
-
-        # Generate url query ?key=val&key2=val2
+        #print fields
         query = urllib.urlencode(fields)
-
-        # Construct our tank uri
-        uri = '%s:/%s?%s' % (cls._name, templ_name, query)
-
+        uri = '%s:/%s?%s' % (cls._name, templ.name, query)
         return uri
 
     @staticmethod
