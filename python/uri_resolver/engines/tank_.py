@@ -118,9 +118,19 @@ class TankResolver(BaseResolver):
         fields = templ.get_fields(filepath)
         fields['version'] = version_flag
 
-        #print fields
+        uri = fields_to_uri(templ.name, fields)
+
+        return uri
+
+    @classmethod
+    def fields_to_uri(cls, templ_name, fields):
+
+        # Generate url query ?key=val&key2=val2
         query = urllib.urlencode(fields)
-        uri = '%s:/%s?%s' % (cls._name, templ.name, query)
+
+        # Construct our tank uri
+        uri = '%s:/%s?%s' % (cls._name, templ_name, query)
+
         return uri
 
     @staticmethod
