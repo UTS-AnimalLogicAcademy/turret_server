@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 name = 'uri_resolver'
 
-version = '0.0.14'
+version = '0.0.15'
 
 authors = ['daniel.flood',
            'ben.skinner']
@@ -9,7 +9,7 @@ authors = ['daniel.flood',
 build_requires = ['python']
 
 def commands():
-    env.PYTHONPATH.append('{root}/python')    
+    env.PYTHONPATH.append('{root}/python')
 
 uuid = '521166cd-725a-402c-a424-e68d24c448fc'
 

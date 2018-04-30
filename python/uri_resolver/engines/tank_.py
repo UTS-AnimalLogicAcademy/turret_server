@@ -132,6 +132,17 @@ class TankResolver(BaseResolver):
         uri = '%s:/%s?%s' % (cls._name, templ.name, query)
         return uri
 
+    @classmethod
+    def fields_to_uri(cls, templ_name, fields):
+
+        # Generate url query ?key=val&key2=val2
+        query = urllib.urlencode(fields)
+
+        # Construct our tank uri
+        uri = '%s:/%s?%s' % (cls._name, templ_name, query)
+
+        return uri
+
     @staticmethod
     def is_tank_asset(filepath, tk):
         templ = tk.template_from_path(filepath)
