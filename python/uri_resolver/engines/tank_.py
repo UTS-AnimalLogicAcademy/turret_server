@@ -33,12 +33,39 @@ class TankResolver(BaseResolver):
         pass
 
     @classmethod
+    def authenticate(self):
+        # Import the ShotgunAuthenticator from the tank_vendor.shotgun_authentication
+        # module. This class allows you to authenticate either interactively or, in this
+        # case, programmatically.
+        from tank_vendor.shotgun_authentication import ShotgunAuthenticator
+
+        # Instantiate the CoreDefaultsManager. This allows the ShotgunAuthenticator to
+        # retrieve the site, proxy and optional script_user credentials from shotgun.yml
+        cdm = sgtk.util.CoreDefaultsManager()
+
+        # Instantiate the authenticator object, passing in the defaults manager.
+        authenticator = ShotgunAuthenticator(cdm)
+
+        # Create a user programmatically using the script's key.
+        user = authenticator.create_script_user(
+            api_script="toolkit_user",
+            api_key="ebd86c2232481aac5ea589bd11831926af90cb937c59f05b50860a112bff2524"
+        )
+
+        # print "User is '%s'" % user
+
+        # Tells Toolkit which user to use for connecting to Shotgun.
+        sgtk.set_authenticated_user(user)
+
+    @classmethod
     def uri_to_filepath(cls, uri):
         """
         uri: "tank:/maya_publish_asset_cache_usd?Step=model&Task=model&asset_type=setPiece&version=latest&Asset=building01"
 
         returns filepath: "/mnt/ala/mav/2018/jobs/s118/assets/setPiece/building01/model/model/caches/usd/building01_model_model_usd.v028.usd"
         """
+
+        cls.authenticate()
 
         print "uri resolver received: %s\n" % uri
 
@@ -117,6 +144,9 @@ class TankResolver(BaseResolver):
 
         returns uri: "tank:/maya_publish_asset_cache_usd?Step=model&Task=model&asset_type=setPiece&version=latest&Asset=building01"
         """
+
+        cls.authenticate()
+
         eng = sgtk.platform.current_engine()
         tk = eng.tank
         templ = tk.template_from_path(filepath)
@@ -145,5 +175,8 @@ class TankResolver(BaseResolver):
 
     @staticmethod
     def is_tank_asset(filepath, tk):
+
+        cls.authenticate()
+
         templ = tk.template_from_path(filepath)
         return True if templ else False
