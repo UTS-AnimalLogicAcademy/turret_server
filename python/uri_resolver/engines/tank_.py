@@ -68,6 +68,8 @@ class TankResolver(BaseResolver):
         returns filepath: "/mnt/ala/mav/2018/jobs/s118/assets/setPiece/building01/model/model/caches/usd/building01_model_model_usd.v028.usd"
         """
 
+        cls.authenticate()
+
 
         print "uri resolver received: %s\n" % uri
 
@@ -146,7 +148,7 @@ class TankResolver(BaseResolver):
 
         returns uri: "tank:/maya_publish_asset_cache_usd?Step=model&Task=model&asset_type=setPiece&version=latest&Asset=building01"
         """
-
+        cls.authenticate()
 
         eng = sgtk.platform.current_engine()
         tk = eng.tank
@@ -176,7 +178,7 @@ class TankResolver(BaseResolver):
 
     @staticmethod
     def is_tank_asset(filepath, tk):
-
+        cls.authenticate()
 
         templ = tk.template_from_path(filepath)
         return True if templ else False
