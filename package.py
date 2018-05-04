@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 name = 'uri_resolver'
 
-version = '0.0.15'
+version = '0.0.16'
 
 authors = ['daniel.flood',
            'ben.skinner']
