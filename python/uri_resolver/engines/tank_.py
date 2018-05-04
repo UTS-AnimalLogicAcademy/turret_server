@@ -24,6 +24,7 @@ class TankResolver(BaseResolver):
     """
     _name = 'tank'
 
+
     @property
     @classmethod
     def name(cls):
@@ -32,11 +33,16 @@ class TankResolver(BaseResolver):
     def validate(self, uri):
         pass
 
-    def __init__(cls):
-        cls.authenticate()
-
     @classmethod
-    def authenticate(self):
+    def authenticate(cls):
+
+        if sgtk.get_authenticated_user():
+            if not sgtk.get_authenticated_user().are_credentials_expired():
+                print "Credentials already exist."
+                return
+                
+        print "Authenticating credentials."
+
         # Import the ShotgunAuthenticator from the tank_vendor.shotgun_authentication
         # module. This class allows you to authenticate either interactively or, in this
         # case, programmatically.
@@ -59,6 +65,8 @@ class TankResolver(BaseResolver):
 
         # Tells Toolkit which user to use for connecting to Shotgun.
         sgtk.set_authenticated_user(user)
+
+        cls._isAuthenticated = True
 
     @classmethod
     def uri_to_filepath(cls, uri):
