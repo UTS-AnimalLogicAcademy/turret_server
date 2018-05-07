@@ -51,6 +51,11 @@ def launchServer():
     # Create ZMQ context
     context = zmq.Context()
 
+    context.setsockopt(zmq.RCVHWM, 100000)
+    context.setsockopt(zmq.SNDHWM, 100000)
+    context.setsockopt(zmq.SNDTIMEO, 50000)
+    context.setsockopt(zmq.RCVTIMEO, 50000)
+
     # Create open socket
     try:
         socket = context.socket(zmq.REP)
