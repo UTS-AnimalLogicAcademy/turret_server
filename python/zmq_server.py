@@ -5,8 +5,6 @@ import logging
 import time
 import sys
 import threading
-import Tkinter
-import tkMessageBox
 import sys
 
 import zmq
@@ -83,24 +81,22 @@ def launchServer():
 #            logger.info("zmq server received message: %s" % message)
             #print("zmq server received message: %s" % message)
 
-            # Convert incoming sgtk template to absolute path
-            filepath = resolver.uri_to_filepath(message)
 
-            #filepath = filepath.encode('utf-8')
-            '''
-            # Will send garbage to client when loading sets, forgo popup for now
-            
-            # If the path cannot be resolved, show dialog warning
-            if (filepath == "NOT_FOUND"):
-                root = Tkinter.Tk()
-                root.update()
-                root.withdraw()
-                tkMessageBox.showwarning("Warning", "The path: \n %s \ncannot be resolved" % message)
-                root.update()
-            else:
-                logger.info("zmq server resolved path: %s\n" % filepath)
-            '''
-            
+            # Convert incoming sgtk template to absolute path
+
+            for retry in range(0,10):
+                try:
+                    print "resolution attempt number %04d" % retry
+                    filepath = resolver.uri_to_filepath(message)
+                    break
+                except Exception as e:
+                    print e
+                    time.sleep(5)
+                    continue
+                print "Giving up"
+                filepath = "###_Could_not_resolve"
+
+
 #            logger.info("zmq server resolved path: %s\n" % filepath)
             #print("zmq server resolved path: %s\n" % filepath)
 
