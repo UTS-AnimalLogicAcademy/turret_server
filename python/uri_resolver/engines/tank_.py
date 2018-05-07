@@ -12,7 +12,7 @@ import sgtk
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
 ZMQ_NULL_RESULT = "NOT_FOUND"
-VERBOSE = True
+VERBOSE = False
 
 
 class TankResolver(BaseResolver):
@@ -75,11 +75,8 @@ class TankResolver(BaseResolver):
 
         returns filepath: "/mnt/ala/mav/2018/jobs/s118/assets/setPiece/building01/model/model/caches/usd/building01_model_model_usd.v028.usd"
         """
-
-        cls.authenticate()
-
-
-        print "uri resolver received: %s\n" % uri
+#        cls.authenticate()
+#        print "uri resolver received: %s\n" % uri
 
         # this is necessary for katana - for some reason katana ships with it's own
         # mangled version of urlparse which only works for some protocols, super annoying
@@ -141,11 +138,11 @@ class TankResolver(BaseResolver):
                     if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
                         return latest
 
-                print "tank uri resolver returning: %s\n" % ZMQ_NULL_RESULT
+#                print "tank uri resolver returning: %s\n" % ZMQ_NULL_RESULT
                 return ZMQ_NULL_RESULT
 
             else:
-                print "tank uri resolver returning: %s\n" % publishes[-1]
+#                print "tank uri resolver returning: %s\n" % publishes[-1]
                 return publishes[-1]
 
 
