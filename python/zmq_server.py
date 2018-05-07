@@ -51,8 +51,8 @@ def launchServer():
     # Create ZMQ context
     context = zmq.Context()
 
-    context.setsockopt(zmq.RCVHWM, 0)
-    context.setsockopt(zmq.SNDHWM, 0)
+    context.setsockopt(zmq.RCVHWM, 5000000)
+    context.setsockopt(zmq.SNDHWM, 5000000)
     context.setsockopt(zmq.SNDTIMEO, 50000)
     context.setsockopt(zmq.RCVTIMEO, 50000)
 
@@ -81,7 +81,7 @@ def launchServer():
             message = socket.recv()
 
 #            logger.info("zmq server received message: %s" % message)
-            print("zmq server received message: %s" % message)
+            #print("zmq server received message: %s" % message)
 
             # Convert incoming sgtk template to absolute path
             filepath = resolver.uri_to_filepath(message)
@@ -102,14 +102,14 @@ def launchServer():
             '''
             
 #            logger.info("zmq server resolved path: %s\n" % filepath)
-            print("zmq server resolved path: %s\n" % filepath)
+            #print("zmq server resolved path: %s\n" % filepath)
 
             # Send back resolved path
             filepath += '\0'
             socket.send(filepath)
             # Debug Log
 #            logger.info("zmq server handled request %s -> %s" % (message, filepath))
-            print("zmq server handled request %s -> %s" % (message, filepath))
+            #print("zmq server handled request %s -> %s" % (message, filepath))
 
     except KeyboardInterrupt:
         raise uri_resolver_exception("Keyboard has interrupted server.")
