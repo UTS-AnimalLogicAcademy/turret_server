@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 name = 'zmq_server'
 
-version = '0.0.10'
+version = '0.0.11'
 
 authors = ['wen.tan',
            'ben.skinner']
