@@ -43,7 +43,7 @@ def createClient(a_address=DEFAULT_ADDRESS, a_port=DEFAULT_PORT, a_message=DEFAU
 
         logClient("Received: %s" % receivedPath)
 
-    print("Sent %s messages" % a_numMessages)
+    logClient("Sent %s messages" % a_numMessages)
 
     socket.close()
 
@@ -61,7 +61,7 @@ def handleClient(options):
     for i in range(len(threads)):
         threads[i].join()
     
-    print("Finished %s threads" % options.numThreads)
+    logClient("Finished %s threads" % options.numThreads)
 
 def main():
     # Setup option parser
