@@ -1,5 +1,8 @@
 #! /usr/bin/python
 
+import cProfile
+import re
+
 import os
 import logging
 import time
@@ -13,7 +16,7 @@ from uri_resolver import resolver
 
 ZMQ_LOG_LOCATION = '/tmp/tank_zmq_server/log'
 
-ZMQ_WORKERS = 1
+ZMQ_WORKERS = 16
 ZMQ_PORT = 5555
 ZMQ_URL = "tcp://*:%s" % ZMQ_PORT
 
@@ -22,12 +25,15 @@ SERVER_RUNNING = False
 
 WORKER_URL = "inproc://workers"
 
+SHOULD_LOG = True
+
 class uri_resolver_exception(Exception):
     pass
 
 def serverLog(a_msg):
-    if a_msg != None:
-        print("[ZMQ Server] " + a_msg + "\n")
+    if SHOULD_LOG:
+        if a_msg != None:
+            print("[ZMQ Server] " + a_msg + "\n")
 
 def workerHandle(workerURL, workerIdx, context=None):
     # Get ref to specified context
@@ -56,7 +62,7 @@ def workerHandle(workerURL, workerIdx, context=None):
                     break
                 except Exception as e:
                     serverLog(e)
-                    time.sleep(5)
+                    #time.sleep(5)
                     continue
 
                 serverLog("Giving up")
@@ -84,10 +90,10 @@ def launchServer():
     # Create ZMQ context
     context = zmq.Context.instance()
 
-    context.setsockopt(zmq.RCVHWM, 5000000)
-    context.setsockopt(zmq.SNDHWM, 5000000)
-    context.setsockopt(zmq.SNDTIMEO, 50000)
-    context.setsockopt(zmq.RCVTIMEO, 50000)
+    #context.setsockopt(zmq.RCVHWM, 5000000)
+    #context.setsockopt(zmq.SNDHWM, 5000000)
+    #context.setsockopt(zmq.SNDTIMEO, 50000)
+    #context.setsockopt(zmq.RCVTIMEO, 50000)
 
     # Socket to talk to resolver clients
     try:
@@ -135,6 +141,7 @@ def StartServerManager():
         while (shouldServerRestart):
             print(" - Launching server.")
             launchServer()
+            
     except uri_resolver_exception as e:
         print("Server manager has caught exception: [%s]" % str(e))
     print("Stopping Server Manager.")
