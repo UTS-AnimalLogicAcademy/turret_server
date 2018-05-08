@@ -1,8 +1,5 @@
 #! /usr/bin/python
 
-import cProfile
-import re
-
 import os
 import logging
 import time
@@ -19,7 +16,6 @@ ZMQ_LOG_LOCATION = '/tmp/tank_zmq_server/log'
 ZMQ_WORKERS = 16
 ZMQ_PORT = 5555
 ZMQ_URL = "tcp://*:%s" % ZMQ_PORT
-
 
 SERVER_RUNNING = False
 
