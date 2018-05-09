@@ -10,7 +10,6 @@ import time
 
 import threading
 
-
 import zmq
 
 from uri_resolver import resolver
@@ -30,6 +29,9 @@ SHOULD_LOG = True
 class uri_resolver_exception(Exception):
     pass
 
+class uri_resolver_exception(Exception):
+    pass
+
 def serverLog(a_msg):
     if SHOULD_LOG:
         if a_msg != None:
@@ -41,6 +43,11 @@ def mainServerFunctionality(a_socket):
 
     filepath = ""
     retry = -1
+
+    if "KILL" in message:
+        a_socket.send("RECEIVED")
+        raise uri_resolver_exception("Server received kill instruction")
+        return
 
     for retry in range(0,10):
         try:
@@ -77,10 +84,11 @@ def workerHandle(workerURL, workerIdx, context=None):
         while True:
             mainServerFunctionality(socket)
 
-    except KeyboardInterrupt:
-        raise uri_resolver_exception("Keyboard has interrupted server.")
+    except uri_resolver_exception as e:
+        raise e
     except Exception as e:
         serverLog("Caught exception: [%s]" % e)
+        raise
 
     serverLog("Worker thread has stopped")
 
@@ -94,11 +102,6 @@ def launchThreadedServer():
 
     # Create ZMQ context
     context = zmq.Context.instance()
-
-    #context.setsockopt(zmq.RCVHWM, 5000000)
-    #context.setsockopt(zmq.SNDHWM, 5000000)
-    #context.setsockopt(zmq.SNDTIMEO, 50000)
-    #context.setsockopt(zmq.RCVTIMEO, 50000)
 
     # Socket to talk to resolver clients
     try:
@@ -127,6 +130,15 @@ def launchThreadedServer():
 
         # Early exit, address already in use
         return
+    except uri_resolver_exception as e:
+        print "pepe"
+        # Cleanup
+        clients.close()
+        workers.close()
+        context.term()
+
+        serverLog("Closed server.")
+        raise uri_resolver_exception(e)
     except KeyboardInterrupt:
         # Cleanup
         clients.close()
@@ -168,6 +180,8 @@ def launchSimpleServer():
 
     except KeyboardInterrupt:
         raise uri_resolver_exception("Keyboard has interrupted server.")
+    except uri_resolver_exception as e:
+        raise uri_resolver_exception(e)
     except Exception as e:
         print("Caught exception: [%s]" % e)
 
@@ -176,9 +190,8 @@ def launchSimpleServer():
 
 # Handle server loop to restart when failure
 def StartServerManager(isThreaded):
-    shouldServerRestart = True
     try:
-        while (shouldServerRestart):
+        while True:
             if isThreaded:
                 launchThreadedServer()
             else:
