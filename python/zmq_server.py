@@ -1,11 +1,15 @@
 #! /usr/bin/python
 
-import os
+import sys
+import os, os.path
+
+from optparse import OptionParser
+
 import logging
 import time
-import sys
+
 import threading
-import sys
+
 
 import zmq
 
@@ -31,6 +35,33 @@ def serverLog(a_msg):
         if a_msg != None:
             print("[ZMQ Server] " + a_msg + "\n")
 
+def mainServerFunctionality(a_socket):
+    # Wait until worker has message to resolve
+    message = a_socket.recv()
+
+    filepath = ""
+    retry = -1
+
+    for retry in range(0,10):
+        try:
+            filepath = resolver.uri_to_filepath(message)
+            if filepath == None:
+                continue
+            break
+        except Exception as e:
+            serverLog(e)
+            #time.sleep(5)
+            continue
+
+        serverLog("Giving up")
+        filepath = "###_Could_not_resolve"
+
+    serverLog("Worker: %02d. Retries: %02d. Resolved Path: %s." % (workerIdx, retry, filepath))
+
+    # Send back resolved path
+    filepath += '\0'
+    a_socket.send(filepath)
+
 def workerHandle(workerURL, workerIdx, context=None):
     # Get ref to specified context
     context = context or zmq.Context.instance()
@@ -44,31 +75,7 @@ def workerHandle(workerURL, workerIdx, context=None):
 
     try: 
         while True:
-            # Wait until worker has message to resolve
-            message = socket.recv()
-
-            filepath = ""
-            retry = -1
-
-            for retry in range(0,10):
-                try:
-                    filepath = resolver.uri_to_filepath(message)
-                    if filepath == None:
-                        continue
-                    break
-                except Exception as e:
-                    serverLog(e)
-                    #time.sleep(5)
-                    continue
-
-                serverLog("Giving up")
-                filepath = "###_Could_not_resolve"
-
-            serverLog("Worker: %02d. Retries: %02d. Resolved Path: %s." % (workerIdx, retry, filepath))
-
-            # Send back resolved path
-            filepath += '\0'
-            socket.send(filepath)
+            mainServerFunctionality(socket)
 
     except KeyboardInterrupt:
         raise uri_resolver_exception("Keyboard has interrupted server.")
@@ -81,7 +88,9 @@ def workerRoutine(workerURL, workerIdx, context=None):
     while True:
         workerHandle(workerURL, workerIdx, context)
 
-def launchServer():
+def launchThreadedServer():
+
+    serverLog("Launching threaded server")
 
     # Create ZMQ context
     context = zmq.Context.instance()
@@ -127,19 +136,69 @@ def launchServer():
         serverLog("Closed server.")
         raise uri_resolver_exception("Keyboard has interrupted server.")
 
+def launchSimpleServer():
+
+    serverLog("Launching simple server")
+
+    # Create ZMQ context
+    context = zmq.Context()
+
+    context.setsockopt(zmq.RCVHWM, 5000000)
+    context.setsockopt(zmq.SNDHWM, 5000000)
+    context.setsockopt(zmq.SNDTIMEO, 50000)
+    context.setsockopt(zmq.RCVTIMEO, 50000)
+
+    # Create open socket
+    try:
+        socket = context.socket(zmq.REP)
+        socket.bind("tcp://*:%s" % ZMQ_PORT)
+        print("Opened ZMQ Server.")
+    except zmq.error.ZMQError:
+
+        # Debug Log
+        raise uri_resolver_exception("ZMQ Server address already in use.")
+
+        # Early exit, address already in use
+        return
+
+    # Listen for client requests
+    try:
+        while True:
+            mainServerFunctionality(socket)
+
+    except KeyboardInterrupt:
+        raise uri_resolver_exception("Keyboard has interrupted server.")
+    except Exception as e:
+        print("Caught exception: [%s]" % e)
+
+    # Close server
+    socket.close()
 
 # Handle server loop to restart when failure
-def StartServerManager():
-    print("Starting Server Manager.")
-
+def StartServerManager(isThreaded):
     shouldServerRestart = True
     try:
         while (shouldServerRestart):
-            print(" - Launching server.")
-            launchServer()
+            if isThreaded:
+                launchThreadedServer()
+            else:
+                launchSimpleServer()
             
     except uri_resolver_exception as e:
         print("Server manager has caught exception: [%s]" % str(e))
-    print("Stopping Server Manager.")
 
-StartServerManager()
+def main():
+    # Setup option parser
+    p = OptionParser(usage="%prog arg1 [options]")
+
+    #p.add_option("-p", "--port", dest="port", default=DEFAULT_PORT, action="store", type="int")
+    #p.add_option("-m", "--message", dest="message", default=DEFAULT_MSG, action="store")
+    #p.add_option("-n", "--numMessages", dest="numMessages", default=DEFAULT_NUM_MESSAGES, action="store", type="int")
+    #p.add_option("-t", "--numThreads", dest="numThreads", default=DEFAULT_NUM_THREADS, action="store", type="int")
+    p.add_option("-t", "--threaded", dest="threaded", default=False, action="store_true")
+    
+    # Run option parser
+    (opts, args) = p.parse_args(sys.argv[1:])
+    StartServerManager(opts.threaded)
+
+main()
