@@ -37,7 +37,7 @@ def serverLog(a_msg):
         if a_msg != None:
             print("[ZMQ Server] " + a_msg + "\n")
 
-def mainServerFunctionality(a_socket):
+def mainServerFunctionality(a_socket, workerIdx = 0):
     # Wait until worker has message to resolve
     message = a_socket.recv()
 
@@ -82,7 +82,7 @@ def workerHandle(workerURL, workerIdx, context=None):
 
     try: 
         while True:
-            mainServerFunctionality(socket)
+            mainServerFunctionality(socket, workerIdx)
 
     except uri_resolver_exception as e:
         raise e
@@ -214,4 +214,6 @@ def main():
     (opts, args) = p.parse_args(sys.argv[1:])
     StartServerManager(opts.threaded)
 
-main()
+#main()
+StartServerManager(False)
+#launchSimpleServer()
