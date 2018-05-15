@@ -11,3 +11,10 @@ rez_install_python(
 	LOCAL_SYMLINK
 )
 
+file(GLOB_RECURSE bin_files "bin/*")
+rez_install_files(
+    ${bin_files}
+    DESTINATION .
+    EXECUTABLE
+    LOCAL_SYMLINK
+)

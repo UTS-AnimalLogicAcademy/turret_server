@@ -14,6 +14,7 @@ VERSION_REGEX = r'v[0-9]{3}'
 ZMQ_NULL_RESULT = "NOT_FOUND"
 VERBOSE = False
 
+TANK_PATH = "/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python"
 
 class TankResolver(BaseResolver):
 
@@ -104,7 +105,7 @@ class TankResolver(BaseResolver):
         # tk = eng.tank
 
         # hard code path - works anywhere:
-        tk = sgtk.tank_from_path("/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python")
+        tk = sgtk.tank_from_path(TANK_PATH)
 
         template_path = tk.templates[template]
 
@@ -155,11 +156,14 @@ class TankResolver(BaseResolver):
         """
         cls.authenticate()
 
-        eng = sgtk.platform.current_engine()
-        tk = eng.tank
+        #eng = sgtk.platform.current_engine()
+        #tk = eng.tank
+
+        tk = sgtk.tank_from_path(TANK_PATH)
         templ = tk.template_from_path(filepath)
 
         if not templ:
+            print "Couldnt find template"
             return
 
         fields = templ.get_fields(filepath)
