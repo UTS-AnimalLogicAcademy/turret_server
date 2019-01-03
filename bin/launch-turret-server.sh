@@ -1,3 +1,3 @@
 #! /bin/bash
 
-nohup zmq_server.py &
+nohup turret-server &
