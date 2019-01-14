@@ -1,3 +1,23 @@
+#
+# Copyright 2019 University of Technology, Sydney
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+#   * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+#     the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+#! /usr/bin/python
+
 import sys
 import os, os.path
 
@@ -16,14 +36,16 @@ DEFAULT_NUM_THREADS = 1
 
 SHOULD_OUTPUT = False
 
-def logClient(a_msg):
+
+def log_client(a_msg):
     if SHOULD_OUTPUT:
         print(a_msg)
 
-def createClient(a_address=DEFAULT_ADDRESS, a_port=DEFAULT_PORT, a_message=DEFAULT_MSG, a_numMessages=DEFAULT_NUM_MESSAGES):
+
+def create_client(a_address=DEFAULT_ADDRESS, a_port=DEFAULT_PORT, a_message=DEFAULT_MSG, a_numMessages=DEFAULT_NUM_MESSAGES):
     context = zmq.Context()
     #  Socket to talk to server
-    logClient("Connecting to uri resolver server...")
+    log_client("Connecting to uri resolver server...")
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://%s:%s" % (a_address, a_port))
 
@@ -36,24 +58,24 @@ def createClient(a_address=DEFAULT_ADDRESS, a_port=DEFAULT_PORT, a_message=DEFAU
         # Send tank path
         socket.send(tq_buffer)
 
-        logClient("Sent: %s" % tq_buffer)
+        log_client("Sent: %s" % tq_buffer)
 
         # Receive absolute path
         receivedPath = socket.recv()
 
-        logClient("Received: %s" % receivedPath)
+        log_client("Received: %s" % receivedPath)
 
-    logClient("Sent %s messages" % a_numMessages)
+    log_client("Sent %s messages" % a_numMessages)
 
     socket.close()
 
 
-def handleClient(options):
+def handle_client(options):
     threads = []
 
     # Start all threads
     for i in range(options.numThreads):
-        thread = Thread(target = createClient, args = (options.address, options.port, options.message, options.numMessages))
+        thread = Thread(target = create_client, args = (options.address, options.port, options.message, options.numMessages))
         thread.start()
         threads.append(thread)
 
@@ -61,7 +83,8 @@ def handleClient(options):
     for i in range(len(threads)):
         threads[i].join()
     
-    logClient("Finished %s threads" % options.numThreads)
+    log_client("Finished %s threads" % options.numThreads)
+
 
 def main():
     # Setup option parser
@@ -80,6 +103,6 @@ def main():
     global SHOULD_OUTPUT
     SHOULD_OUTPUT = opts.debug
 
-    handleClient(opts)
+    handle_client(opts)
 
 main()

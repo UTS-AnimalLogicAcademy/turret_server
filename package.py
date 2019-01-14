@@ -2,7 +2,7 @@
 
 name = 'turret_server'
 
-version = '0.0.17'
+version = '1.0.0'
 
 authors = ['wen.tan',
            'ben.skinner',
@@ -14,5 +14,5 @@ build_requires = ['python']
 
 def commands():
     env.PATH.append('{root}/bin')
-    env.TURRET_SERVER.set('{root}/bin/launch_turret_server.sh')
+    env.TURRET_SERVER.set('{root}/bin/launch-turret-server.sh')
     env.PYTHONPATH.append('{root}/python')

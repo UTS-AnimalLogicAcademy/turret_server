@@ -1,12 +1,35 @@
-import os
+#
+# Copyright 2019 University of Technology, Sydney
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+#   * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+#     the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+import json
 import sys
-sys.path.append('/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python')
-import sgtk
-
-TANK_PATH = "/mnt/ala/mav/2018/jobs/s118/config/pipeline/production/install/core/python"
+import os
 
 
-def authenticate():
+def authenticate(sgtk):
+    """
+
+    Args:
+        sgtk:
+
+    Returns:
+
+    """
 
     if sgtk.get_authenticated_user():
         if not sgtk.get_authenticated_user().are_credentials_expired():
@@ -36,6 +59,14 @@ def authenticate():
     # Tells Toolkit which user to use for connecting to Shotgun.
     sgtk.set_authenticated_user(user)
 
-    cls._isAuthenticated = True
 
+def import_sgtk():
+    """
 
+    Returns:
+
+    """
+    sgtk_location = os.environ['SHARED_TANK_PATH']
+    sys.path.append(sgtk_location)
+    import sgtk
+    return sgtk
