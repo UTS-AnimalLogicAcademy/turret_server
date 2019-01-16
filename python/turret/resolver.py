@@ -235,7 +235,8 @@ def get_tank():
     with open(proj_map_file) as f:
         proj_map = json.load(f)
 
-    proj = proj_map[PROJ]
+    proj_name = PROJ or os.getenv('DEFAULT_PROJECT')
+    proj = proj_map[proj_name]
 
     tank = SGTK.tank_from_path(proj)
     return tank
