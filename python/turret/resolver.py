@@ -22,26 +22,111 @@ import urllib
 import os
 from urlparse import urlparse
 
-from . import sg_authenticate
-
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
 ZMQ_NULL_RESULT = "NOT_FOUND"
 VERBOSE = False
 
-PROJ = ""
-AUTHENTICATED = False
-SGTK = False
 
-# Make sure these environment variables are set:
-#
-# Path to a json file, with a dict of {projName: projPath}
-# $PROJ_MAP
-#
-# Optional environment variables:
-#
-# if you don't store the project name in the URI:
-# $DEFAULT_PROJECT
+class _Resolver(object):
+    path_var_regex = r'[$]{1}[A-Z_]*'
+    version_regex = r'v[0-9]{3}'
+    zmq_null_result = "NOT_FOUND"
+    verbose = False
+    _instance = None
+
+    def __init__(self):
+        self.proj = os.getenv('DEFAULT_PROJECT')
+        self.sgtk = None
+        self.sg_info = None
+        self.tank = None
+
+        self.setup()
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(_Resolver, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    def setup(self):
+        self.load_sg_info()
+
+        # the order of the following calls matters
+
+        # first import sgtk:
+        self.import_sgtk()
+
+        # sg authentication must happen after sgtk import:
+        self.authenticate()
+
+        # tank object comes last:
+        self.tank_ = self.load_tank()
+
+    def load_tank(self):
+        """
+
+        Returns:
+
+        """
+        proj_name = self.proj or os.getenv('DEFAULT_PROJECT')
+        proj_install = self.sg_info['install']
+        proj = proj_install[proj_name]
+        self.tank = self.sgtk.tank_from_path(proj)
+
+    def import_sgtk(self):
+        """
+
+        Returns:
+
+        """
+        sgtk_location = os.environ['SHARED_TANK_PATH']
+        sys.path.append(sgtk_location)
+        import sgtk
+        self.sgtk = sgtk
+
+    def load_sg_info(self):
+        sg_info_file = os.environ['SHOTGUN_INFO']
+
+        with open(sg_info_file) as f:
+            self.sg_info = json.load(f)
+
+    def authenticate(self):
+        """
+
+        Args:
+            sgtk:
+
+        Returns:
+
+        """
+
+        if self.sgtk.get_authenticated_user():
+            if not self.sgtk.get_authenticated_user().are_credentials_expired():
+                print "Credentials already exist."
+                return
+
+        print "Authenticating credentials."
+
+        # Import the ShotgunAuthenticator from the tank_vendor.shotgun_authentication
+        # module. This class allows you to authenticate either interactively or, in this
+        # case, programmatically.
+        from tank_vendor.shotgun_authentication import ShotgunAuthenticator
+
+        # Instantiate the CoreDefaultsManager. This allows the ShotgunAuthenticator to
+        # retrieve the site, proxy and optional script_user credentials from shotgun.yml
+        cdm = self.sgtk.util.CoreDefaultsManager()
+
+        # Instantiate the authenticator object, passing in the defaults manager.
+        authenticator = ShotgunAuthenticator(cdm)
+
+        # Create a user programmatically using the script's key.
+        user = authenticator.create_script_user(
+            api_script="toolkit_user",
+            api_key=os.getenv('SG_API_KEY')
+        )
+
+        # Tells Toolkit which user to use for connecting to Shotgun.
+        self.sgtk.set_authenticated_user(user)
 
 
 def uri_to_filepath(uri):
@@ -53,9 +138,10 @@ def uri_to_filepath(uri):
     Returns:
 
     """
+    _resolver = _Resolver()
 
     # this is necessary for katana - for some reason katana ships with it's own
-    # mangled version of urlparse which only works for some protocols, so switch
+    # modified version of urlparse which only works for some protocols, so switch
     # to http
     if uri.startswith('tank://'):
         uri = uri.replace('tank://', 'http:/')
@@ -83,60 +169,72 @@ def uri_to_filepath(uri):
 
     version = fields.get('version')
     asset_time = fields.get('time')
+    platform = fields.get('platform')
 
-    # project is specified in URI
+    # can't remember if it's necessary to do this, now we have a shared install?
     if proj:
-        global PROJ
-        if proj != PROJ:
-            # cache proj value to global
-            PROJ = proj
+        if proj != _resolver.proj:
+            _resolver.proj = proj
+            _resolver.load_tank()
 
-    global SGTK
-    if not SGTK:
-        SGTK = sg_authenticate.import_sgtk()
-
-    global AUTHENTICATED
-    if not AUTHENTICATED:
-        sg_authenticate.authenticate(SGTK)
-        AUTHENTICATED = True
-
-    tank = get_tank()
-    template_path = tank.templates[template]
+    template_path = _resolver.tank.templates[template]
 
     if VERBOSE:
         print("tank uri resolver found sgtk template: %s\n" % template_path)
 
-    if version:
-        fields_ = {}
-        for key in fields:
-            if key == 'version':
-                continue
-            fields_[key] = fields[key]
+    if not version:
+        return None
 
-        publishes = tank.paths_from_template(template_path, fields_)
+    result = ""
+    fields_ = {}
+    for key in fields:
+        if key == 'version':
+            continue
+        fields_[key] = fields[key]
 
-        if len(publishes) == 0:
-            return ZMQ_NULL_RESULT
+    publishes = _resolver.tank.paths_from_template(template_path, fields_)
 
-        publishes.sort()
+    if len(publishes) == 0:
+        return ZMQ_NULL_RESULT
 
-        if VERBOSE:
-            print "tank uri resolver found publishes: %s\n" % publishes
+    publishes.sort()
 
-        if asset_time:
-            asset_time = float(asset_time)
-            while len(publishes) > 0:
-                latest = publishes.pop()
-                latest_time = os.path.getmtime(latest)
+    if VERBOSE:
+        print "tank uri resolver found publishes: %s\n" % publishes
 
-                # handle rounding issues - apparently this happens:
-                if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
-                    return latest
+    # asset time was specified
+    if asset_time:
+        asset_time = float(asset_time)
+        while len(publishes) > 0:
+            latest = publishes.pop()
+            latest_time = os.path.getmtime(latest)
 
-            return ZMQ_NULL_RESULT
+            # handle rounding issues - apparently this happens:
+            if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
+                result = latest
 
-        else:
-            return publishes[-1]
+        if not result:
+            result = ZMQ_NULL_RESULT
+
+    # no asset time was specified - get the latest
+    else:
+        result = publishes[-1]
+
+    if platform == 'windows':
+        # currently we assume the turret server is running on linux, so
+        # the retried path will be a linux one
+
+        win_platform = _resolver.sg_info['platform']['windows']
+        lin_platform = _resolver.sg_info['platform']['linux']
+
+        # there may be a better way to do this, without accessing a private member?
+        windows_root = template_path._per_platform_roots[win_platform]
+        linux_root = template_path._per_platform_roots[lin_platform]
+
+        result = result.replace(linux_root, windows_root)
+        result = result.replace('/', '\\')
+
+    return result
 
 
 def filepath_to_uri(filepath, version_flag="latest", proj=""):
@@ -150,25 +248,9 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     Returns:
 
     """
+    _resolver = _Resolver()
 
-    if not proj:
-        proj = os.environ['DEFAULT_PROJECT']
-
-    global PROJ
-    if proj != PROJ:
-        PROJ = proj
-
-    global SGTK
-    if not SGTK:
-        SGTK = sg_authenticate.import_sgtk()
-
-    global AUTHENTICATED
-    if not AUTHENTICATED:
-        sg_authenticate.authenticate(SGTK)
-        AUTHENTICATED = True
-
-    tank = get_tank()
-    templ = tank.template_from_path(filepath)
+    templ = _resolver.tank.template_from_path(filepath)
 
     if not templ:
         print "Couldnt find template"
@@ -176,6 +258,20 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
 
     fields = templ.get_fields(filepath)
     fields['version'] = version_flag
+
+    install_ = _resolver.sg_info['install']
+
+    for key in install_:
+        value = install_[key]
+        if filepath.startswith(value):
+            proj = key
+            break
+
+    # can't remember if it's necessary to do this, now we have a shared install?
+    if proj != _resolver.proj:
+        _resolver.proj = proj
+        _resolver.load_tank()
+
     query = urllib.urlencode(fields)
     uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
     return uri
@@ -206,37 +302,6 @@ def is_tank_asset(filepath, tk):
     Returns:
 
     """
-    global SGTK
-    if not SGTK:
-        SGTK = sg_authenticate.import_sgtk()
-
-    global AUTHENTICATED
-    if not AUTHENTICATED:
-        sg_authenticate.authenticate(SGTK)
-        AUTHENTICATED = True
-
-    sg_authenticate.authenticate(SGTK)
     templ = tk.template_from_path(filepath)
     return True if templ else False
 
-
-def get_tank():
-    """
-
-    Returns:
-
-    """
-    global SGTK
-    if not SGTK:
-        SGTK = sg_authenticate.import_sgtk()
-
-    proj_map_file = os.environ['PROJ_MAP']
-
-    with open(proj_map_file) as f:
-        proj_map = json.load(f)
-
-    proj_name = PROJ or os.getenv('DEFAULT_PROJECT')
-    proj = proj_map[proj_name]
-
-    tank = SGTK.tank_from_path(proj)
-    return tank
