@@ -129,6 +129,10 @@ class _Resolver(object):
         self.sgtk.set_authenticated_user(user)
 
 
+def authenticate():
+    _Resolver()
+
+
 def uri_to_filepath(uri):
     """
 

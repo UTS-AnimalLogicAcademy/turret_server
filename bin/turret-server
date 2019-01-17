@@ -28,7 +28,6 @@ import threading
 import zmq
 
 from turret import resolver
-from turret import sg_authenticate
 
 
 TURRET_LOG_LOCATION = '/usr/tmp/turret-server/log'
@@ -292,13 +291,12 @@ def start_server_manager(isThreaded):
 
     """
 
+
     try:
         while True:
             if isThreaded:
-                # authenticate once now, to avoid all threads trying to in parallel:
-                SGTK = sg_authenticate.import_sgtk()
-                sg_authenticate.authenticate(SGTK)
-
+                # this will perform SG authentication, to avoid all threads trying to do it in parallel
+                resolver.authenticate()
                 launch_threaded_server()
             else:
                 launch_simple_server()
