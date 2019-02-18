@@ -33,7 +33,7 @@ from turret import resolver
 TURRET_LOG_LOCATION = '/usr/tmp/turret-server/log'
 ZMQ_WORKERS = 16
 ZMQ_PORT = 5555
-ZMQ_URL = "tcp://127.0.0.1:%s" % ZMQ_PORT
+ZMQ_URL = "tcp://*:%s" % ZMQ_PORT
 SERVER_RUNNING = False
 WORKER_URL = "inproc://workers"
 SHOULD_LOG = True
