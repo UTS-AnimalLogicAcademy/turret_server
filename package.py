@@ -2,7 +2,7 @@
 
 name = 'turret_server'
 
-version = '0.0.5'
+version = '0.0.6'
 
 authors = ['wen.tan',
            'ben.skinner',

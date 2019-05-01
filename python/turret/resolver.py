@@ -207,22 +207,23 @@ def uri_to_filepath(uri):
         print "tank uri resolver found publishes: %s\n" % publishes
 
     # asset time was specified
-#    if asset_time:
-#        asset_time = float(asset_time)
-#        while len(publishes) > 0:
-#            latest = publishes.pop()
-#            latest_time = os.path.getmtime(latest)
-#
-#            # handle rounding issues - apparently this happens:
-#            if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
-#                result = latest
-#
-#        if not result:
-#            result = ZMQ_NULL_RESULT
-#
-#    # no asset time was specified - get the latest
-#    else:
-#        result = publishes[-1]
+    if asset_time:
+        asset_time = float(asset_time)
+        while len(publishes) > 0:
+            latest = publishes.pop()
+            latest_time = os.path.getmtime(latest)
+
+            # handle rounding issues - apparently this happens:
+            if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
+                result = latest
+                break
+
+        if not result:
+            result = ZMQ_NULL_RESULT
+
+    # no asset time was specified - get the latest
+    else:
+        result = publishes[-1]
     
     result = publishes[-1]
 
