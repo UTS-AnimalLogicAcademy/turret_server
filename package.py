@@ -8,7 +8,7 @@ authors = ['wen.tan',
            'ben.skinner',
            'daniel.flood']
 
-requires = ['pyzmq']
+requires = ['pyzmq', 'turret_resolver']
 
 build_requires = ['python']
 
