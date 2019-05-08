@@ -1,3 +1,3 @@
 #! /bin/bash
 
-nohup turret-server --threaded >/dev/null 2>&1  &
+nohup ${TURRET_SRC}/turret-server.py --threaded >/dev/null 2>&1  &
