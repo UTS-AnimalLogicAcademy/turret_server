@@ -24,6 +24,7 @@ import logging
 import sys
 from optparse import OptionParser
 import threading
+import traceback
 
 import zmq
 
@@ -158,8 +159,11 @@ def worker_handle(workerURL, workerIdx, context=None):
     except Exception as e:
         # server_log("Caught exception: [%s]" % e)
         LOGGER.info("Caught exception: [%s]" % e)
+        LOGGER.info(traceback.format_exc())
         raise
         server_log("Caught exception: [%s]" % e)
+        server_log(traceback.format_exc())
+
     # server_log("Worker thread has stopped")
     LOGGER.info("Worker thread has stopped")
 

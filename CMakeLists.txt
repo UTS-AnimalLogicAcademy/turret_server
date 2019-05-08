@@ -9,3 +9,20 @@ rez_install_files(
     EXECUTABLE
     LOCAL_SYMLINK
 )
+
+
+file(GLOB_RECURSE bin_files "src/*")
+rez_install_files(
+    ${bin_files}
+    DESTINATION .
+    EXECUTABLE
+    LOCAL_SYMLINK
+)
+
+file(GLOB_RECURSE bin_files "tests/*")
+rez_install_files(
+    ${bin_files}
+    DESTINATION .
+    EXECUTABLE
+    LOCAL_SYMLINK
+)

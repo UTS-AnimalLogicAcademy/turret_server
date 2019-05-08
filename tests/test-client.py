@@ -95,7 +95,7 @@ def main():
     p.add_option("-m", "--message", dest="message", default=DEFAULT_MSG, action="store")
     p.add_option("-n", "--numMessages", dest="numMessages", default=DEFAULT_NUM_MESSAGES, action="store", type="int")
     p.add_option("-t", "--numThreads", dest="numThreads", default=DEFAULT_NUM_THREADS, action="store", type="int")
-    p.add_option("-d", "--debug", dest="debug", default=False, action="store_true")
+    p.add_option("-d", "--debug", dest="debug", default=True, action="store_true")
     
     # Run option parser
     (opts, args) = p.parse_args(sys.argv[1:])
