@@ -1,5 +1,3 @@
-#! /usr/bin/python
-
 #
 # Copyright 2019 University of Technology, Sydney
 #
