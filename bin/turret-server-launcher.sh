@@ -1,3 +1,3 @@
 #!/bin/bash
 
-${TURRET_SRC}/turret-server.py --threaded
+python ${TURRET_SRC}/turret-server.py --threaded
