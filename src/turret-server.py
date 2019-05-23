@@ -20,9 +20,10 @@ import os
 import time
 import logging
 import sys
-from optparse import OptionParser
 import threading
 import traceback
+
+from optparse import OptionParser
 
 import zmq
 
@@ -41,7 +42,7 @@ DEBUG_LOG = False
 LOGGER = None
 
 
-class uri_resolver_exception(Exception):
+class turret_server_exception(Exception):
     """
 
     """
@@ -88,7 +89,7 @@ def process_socket(a_socket, workerIdx=0):
     Returns:
         None
     Raises:
-        uri_resolver_exception
+        turret_server_exception
     """
     # Wait until worker has message to resolve
 
@@ -103,10 +104,9 @@ def process_socket(a_socket, workerIdx=0):
                 raise e
         else:
             filepath = ""
-
             if "KILL" in message:
                 a_socket.send("RECEIVED")
-                raise uri_resolver_exception("Server received kill instruction")
+                raise turret_server_exception("Server received kill instruction")
 
             for retry in range(0, 10):
                 try:
@@ -116,7 +116,6 @@ def process_socket(a_socket, workerIdx=0):
                     break
                 except Exception as e:
                     filepath = ''
-                    # server_log(str(e))
                     LOGGER.info(str(e))
                     continue
 
@@ -145,24 +144,21 @@ def worker_handle(workerURL, workerIdx, context=None):
 
     socket.connect(workerURL)
 
-    # server_log("Started worker thread")
     LOGGER.info("Started worker thread")
 
     try: 
         while True:
             process_socket(socket, workerIdx)
 
-    except uri_resolver_exception as e:
+    except turret_server_exception as e:
         raise e
     except Exception as e:
-        # server_log("Caught exception: [%s]" % e)
         LOGGER.info("Caught exception: [%s]" % e)
         LOGGER.info(traceback.format_exc())
         raise
-        server_log("Caught exception: [%s]" % e)
-        server_log(traceback.format_exc())
+        LOGGER.info("Caught exception: [%s]" % e)
+        LOGGER.info(traceback.format_exc())
 
-    # server_log("Worker thread has stopped")
     LOGGER.info("Worker thread has stopped")
 
 
@@ -188,7 +184,6 @@ def launch_threaded_server():
 
     """
 
-    # server_log("Launching threaded server")
     LOGGER.info("Launching threaded server")
 
     # Create ZMQ context
@@ -208,7 +203,6 @@ def launch_threaded_server():
             thread = threading.Thread(target=worker_routine, args=(WORKER_URL, i,))
             thread.start()
 
-        # server_log("Open server with %s workers." % ZMQ_WORKERS)
         LOGGER.info("Open server with %s workers." % ZMQ_WORKERS)
         
         # Link clients and workers
@@ -216,29 +210,27 @@ def launch_threaded_server():
 
     except zmq.error.ZMQError:
         # Debug Log
-        raise uri_resolver_exception("ZMQ Server address already in use.")
+        raise turret_server_exception("ZMQ Server address already in use.")
 
         # Early exit, address already in use
         return
 
-    except uri_resolver_exception as e:
+    except turret_server_exception as e:
         print "pepe"
         # Cleanup
         clients.close()
         workers.close()
         context.term()
-        # server_log("Closed server.")
         LOGGER.info("Closed server.")
-        raise uri_resolver_exception(e)
+        raise turret_server_exception(e)
 
     except KeyboardInterrupt:
         # Cleanup
         clients.close()
         workers.close()
         context.term()
-        # server_log("Closed server.")
         LOGGER.info("Closed server.")
-        raise uri_resolver_exception("Keyboard has interrupted server.")
+        raise turret_server_exception("Keyboard has interrupted server.")
 
 
 def launch_simple_server():
@@ -247,7 +239,6 @@ def launch_simple_server():
     Returns:
 
     """
-    # server_log("Launching simple server")
     LOGGER.info("Launching simple server")
 
 
@@ -264,16 +255,16 @@ def launch_simple_server():
         try:
             socket.bind(ZMQ_URL)
         except zmq.error.ZMQError:
-            raise uri_resolver_exception("ZMQ Server address already in use.")
+            raise turret_server_exception("ZMQ Server address already in use.")
 
         # Listen for client requests
         try:
             process_socket(socket)
 
         except KeyboardInterrupt:
-            raise uri_resolver_exception("Keyboard has interrupted server.")
-        except uri_resolver_exception as e:
-            raise uri_resolver_exception(e)
+            raise turret_server_exception("Keyboard has interrupted server.")
+        except turret_server_exception as e:
+            raise turret_server_exception(e)
         except Exception as e:
             print("Caught exception:", e)
 
@@ -303,7 +294,7 @@ def start_server_manager(isThreaded):
             else:
                 launch_simple_server()
 
-    except uri_resolver_exception as e:
+    except turret_server_exception as e:
         print("Server manager has caught exception: [%s]" % str(e))
 
 
