@@ -1,5 +1,5 @@
 # turret_server
-**turret_server** is the backbone of all other turret plugins. The server runs in the background on workstation computers, waiting to receive turret uri queries, ready to convert and respond with the appropriate file path. We run turret as a linux service on each artist work station. This helps to lower latency and decentralize hosting requirements. 
+The **turret_server** runs in the background on workstation computers, waiting to receive turret uri queries, ready to convert and respond with the appropriate file path. We run turret as a linux service on each artist work station. This helps to lower latency and decentralize hosting requirements. 
 
 ## Building
 We use the [rez](https://github.com/nerdvegas/rez) build system at utsala, with the correct pacakge requirements, building this with rez should work straight out of the box.
