@@ -1,7 +1,12 @@
 # turret_server
 **turret_server** is the backbone of all other turret plugins. The server runs in the background on workstation computers, waiting to receive turret uri queries, ready to convert and respond with the appropriate file path. We run turret as a linux service on each artist work station. This helps to lower latency and decentralize hosting requirements. 
 
-## Requirements
+## Building
+We use the [rez](https://github.com/nerdvegas/rez) build system at utsala, with the correct pacakge requirements, building this with rez should work straight out of the box.
+
+Outside of rez, having the required software installed and correctly located in the `PATH` and `PYTHONPATH` environment variables should suffice.
+
+### Requirements
  * turret_resolver
  * pyzmq-16.0.3
 
