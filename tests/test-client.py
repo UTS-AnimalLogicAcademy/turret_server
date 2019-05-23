@@ -36,7 +36,6 @@ DEFAULT_NUM_THREADS = 1
 
 SHOULD_OUTPUT = False
 
-
 def log_client(a_msg):
     if SHOULD_OUTPUT:
         print(a_msg)
