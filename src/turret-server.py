@@ -96,8 +96,8 @@ def process_socket(a_socket, workerIdx=0):
     while True:
 
         try:
-            message = a_socket.recv()
-        except zmq.ZMQError, e:
+            message = a_socket.recv().decode()
+        except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 pass
             else:
@@ -105,7 +105,7 @@ def process_socket(a_socket, workerIdx=0):
         else:
             filepath = ""
             if "KILL" in message:
-                a_socket.send("RECEIVED")
+                a_socket.send_string("RECEIVED")
                 raise turret_server_exception("Server received kill instruction")
 
             for retry in range(0, 10):
@@ -121,7 +121,7 @@ def process_socket(a_socket, workerIdx=0):
 
             # Send back resolved path
             filepath += '\0'
-            a_socket.send(filepath)
+            a_socket.send_string(filepath)
             LOGGER.info("received: %s\nsent: %s\n" % (message, filepath))
 
 
@@ -216,7 +216,7 @@ def launch_threaded_server():
         return
 
     except turret_server_exception as e:
-        print "pepe"
+        print("pepe")
         # Cleanup
         clients.close()
         workers.close()

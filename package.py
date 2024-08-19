@@ -2,13 +2,14 @@
 
 name = 'turret_server'
 
-version = '1.1.0'
+version = '1.1.1'
 
 authors = ['wen.tan',
            'ben.skinner',
-           'daniel.flood']
+           'daniel.flood',
+           'jonah.newton']
 
-requires = ['pyzmq', 'turret_resolver']
+requires = ['pyzmq-21.6', 'turret_resolver']
 
 build_requires = ['python']
 
