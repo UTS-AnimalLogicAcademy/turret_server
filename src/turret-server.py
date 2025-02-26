@@ -165,7 +165,6 @@ async def worker_handle(workerURL, workerIdx, context=None):
 
 async def setup_proxy(clients, workers):
     # Ensure worker threads are running
-    time.sleep(1)
     LOGGER.info("Setup ZMQ Proxy")
     await asyncio.to_thread(zmq.proxy, clients, workers)
     
