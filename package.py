@@ -2,16 +2,14 @@
 
 name = 'turret_server'
 
-version = '1.1.1'
+version = '1.2.0'
 
 authors = ['wen.tan',
            'ben.skinner',
            'daniel.flood',
            'jonah.newton']
 
-requires = ['pyzmq-21.6', 'turret_resolver']
-
-build_requires = ['python']
+requires = ['pyzmq-21.6', 'turret_resolver', 'python-3.7+']
 
 def commands():
     env.PATH.append('{root}/bin')

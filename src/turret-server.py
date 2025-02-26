@@ -20,18 +20,18 @@ import os
 import time
 import logging
 import sys
-import threading
 import traceback
+import asyncio
 
 from optparse import OptionParser
 
 import zmq
+import zmq.asyncio
 
 from turret import resolver
 
 
 TURRET_LOG_LOCATION = '/usr/tmp/turret-server/log'
-ZMQ_WORKERS = 16
 ZMQ_PORT = 5555
 ZMQ_URL = "tcp://*:%s" % ZMQ_PORT
 SERVER_RUNNING = False
@@ -81,7 +81,7 @@ def get_logger():
     return logger
 
 
-def process_socket(a_socket, workerIdx=0):
+async def process_socket(a_socket, workerIdx=0):
     """
     Args:
         a_socket:
@@ -94,9 +94,11 @@ def process_socket(a_socket, workerIdx=0):
     # Wait until worker has message to resolve
 
     while True:
-
         try:
-            message = a_socket.recv().decode()
+            #print("Waiting for message - %s" % workerIdx)
+            message_recv = await a_socket.recv()
+            #print("Received message - %s" % workerIdx)
+            message = message_recv.decode()
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 pass
@@ -110,7 +112,7 @@ def process_socket(a_socket, workerIdx=0):
 
             for retry in range(0, 10):
                 try:
-                    filepath = resolver.uri_to_filepath(message)
+                    filepath = await asyncio.to_thread(resolver.uri_to_filepath,message)
                     if filepath == None:
                         continue
                     break
@@ -125,7 +127,7 @@ def process_socket(a_socket, workerIdx=0):
             LOGGER.info("received: %s\nsent: %s\n" % (message, filepath))
 
 
-def worker_handle(workerURL, workerIdx, context=None):
+async def worker_handle(workerURL, workerIdx, context=None):
     """
 
     Args:
@@ -137,18 +139,18 @@ def worker_handle(workerURL, workerIdx, context=None):
 
     """
     # Get ref to specified context
-    context = context or zmq.Context.instance()
+    context = context or zmq.asyncio.Context.instance()
 
     # Socket to talk to dispatcher
     socket = context.socket(zmq.REP)
 
     socket.connect(workerURL)
 
-    LOGGER.info("Started worker thread")
+    LOGGER.info("Started worker thread TEST")
 
     try: 
-        while True:
-            process_socket(socket, workerIdx)
+        # while True:
+        await process_socket(socket, workerIdx)
 
     except turret_server_exception as e:
         raise e
@@ -161,21 +163,12 @@ def worker_handle(workerURL, workerIdx, context=None):
 
     LOGGER.info("Worker thread has stopped")
 
-
-def worker_routine(workerURL, workerIdx, context=None):
-    """
-
-    Args:
-        workerURL:
-        workerIdx:
-        context:
-
-    Returns:
-
-    """
-    while True:
-        worker_handle(workerURL, workerIdx, context)
-
+async def setup_proxy(clients, workers):
+    # Ensure worker threads are running
+    time.sleep(1)
+    LOGGER.info("Setup ZMQ Proxy")
+    await asyncio.to_thread(zmq.proxy, clients, workers)
+    
 
 def launch_threaded_server():
     """
@@ -187,7 +180,7 @@ def launch_threaded_server():
     LOGGER.info("Launching threaded server")
 
     # Create ZMQ context
-    context = zmq.Context.instance()
+    context = zmq.asyncio.Context.instance()
 
     # Socket to talk to resolver clients
     try:
@@ -198,15 +191,8 @@ def launch_threaded_server():
         workers = context.socket(zmq.DEALER)
         workers.bind(WORKER_URL)
 
-        # Launch pool of workers
-        for i in range(ZMQ_WORKERS):
-            thread = threading.Thread(target=worker_routine, args=(WORKER_URL, i,))
-            thread.start()
-
-        LOGGER.info("Open server with %s workers." % ZMQ_WORKERS)
+        asyncio.run(asyncio.wait([worker_handle(WORKER_URL,0), setup_proxy(clients, workers)]))
         
-        # Link clients and workers
-        zmq.proxy(clients, workers)
 
     except zmq.error.ZMQError:
         # Debug Log
@@ -288,7 +274,7 @@ def start_server_manager(isThreaded):
     try:
         while True:
             if isThreaded:
-                # this will perform SG authentication, to avoid all threads trying to do it in parallel
+                # this will perform SG authentication, to avoid multiple workers trying to do it at the same time
                 resolver.authenticate()
                 launch_threaded_server()
             else:
@@ -307,6 +293,7 @@ def main():
     LOGGER = get_logger()
 
     start_server_manager(opts.threaded)
+    
 
 
 if __name__ == "__main__":
