@@ -146,7 +146,7 @@ async def worker_handle(workerURL, workerIdx, context=None):
 
     socket.connect(workerURL)
 
-    LOGGER.info("Started worker thread TEST")
+    LOGGER.info("Started worker thread")
 
     try: 
         # while True:
