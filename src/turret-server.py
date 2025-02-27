@@ -22,6 +22,7 @@ import logging
 import sys
 import traceback
 import asyncio
+import concurrent.futures
 
 from optparse import OptionParser
 
@@ -32,6 +33,7 @@ from turret import resolver
 
 
 TURRET_LOG_LOCATION = '/usr/tmp/turret-server/log'
+ZMQ_WORKERS = 12
 ZMQ_PORT = 5555
 ZMQ_URL = "tcp://*:%s" % ZMQ_PORT
 SERVER_RUNNING = False
@@ -81,7 +83,7 @@ def get_logger():
     return logger
 
 
-async def process_socket(a_socket, workerIdx=0):
+async def process_socket(a_socket, executor, workerIdx=0):
     """
     Args:
         a_socket:
@@ -92,7 +94,7 @@ async def process_socket(a_socket, workerIdx=0):
         turret_server_exception
     """
     # Wait until worker has message to resolve
-
+    loop = asyncio.get_event_loop()
     while True:
         try:
             #print("Waiting for message - %s" % workerIdx)
@@ -112,7 +114,7 @@ async def process_socket(a_socket, workerIdx=0):
 
             for retry in range(0, 10):
                 try:
-                    filepath = await asyncio.to_thread(resolver.uri_to_filepath,message)
+                    filepath = await loop.run_in_executor(executor,resolver.uri_to_filepath,message)
                     if filepath == None:
                         continue
                     break
@@ -127,7 +129,7 @@ async def process_socket(a_socket, workerIdx=0):
             LOGGER.info("received: %s\nsent: %s\n" % (message, filepath))
 
 
-async def worker_handle(workerURL, workerIdx, context=None):
+async def worker_handle(workerURL, workerIdx, executor, context=None):
     """
 
     Args:
@@ -146,11 +148,11 @@ async def worker_handle(workerURL, workerIdx, context=None):
 
     socket.connect(workerURL)
 
-    LOGGER.info("Started worker thread")
+    LOGGER.info("Started worker thread - %s" % workerIdx)
 
     try: 
         # while True:
-        await process_socket(socket, workerIdx)
+        await process_socket(socket, executor, workerIdx)
 
     except turret_server_exception as e:
         raise e
@@ -190,7 +192,9 @@ def launch_threaded_server():
         workers = context.socket(zmq.DEALER)
         workers.bind(WORKER_URL)
 
-        asyncio.run(asyncio.wait([worker_handle(WORKER_URL,0), setup_proxy(clients, workers)]))
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+
+            asyncio.run(asyncio.wait([worker_handle(WORKER_URL,x,executor) for x in range(ZMQ_WORKERS)] + [setup_proxy(clients, workers)]))
         
 
     except zmq.error.ZMQError:
@@ -273,7 +277,7 @@ def start_server_manager(isThreaded):
     try:
         while True:
             if isThreaded:
-                # this will perform SG authentication, to avoid multiple workers trying to do it at the same time
+                # this will perform SG authentication, to avoid multiple workers trying to do it in parallel
                 resolver.authenticate()
                 launch_threaded_server()
             else:
