@@ -9,6 +9,7 @@ Outside of rez, having the required software installed and correctly located in 
 ### Requirements
  * turret_resolver
  * pyzmq-16.0.3
+ * Python 3 - for asyncio
 
 ## Notes
  * Projects are correctly setup in Shotgun, and configured with a shared toolkit core (https://support.shotgunsoftware.com/hc/en-us/articles/219040468)
