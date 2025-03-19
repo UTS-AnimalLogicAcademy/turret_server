@@ -1,5 +1,5 @@
 # turret_server
-The **turret_server** runs in the background on workstation computers, waiting to receive turret uri queries, ready to convert and respond with the appropriate file path. We run turret as a linux service on each artist work station. This helps to lower latency and decentralize hosting requirements. 
+The **turret_server** runs in the background on workstation computers, waiting to receive turret uri queries from clients extending [turret_lib](https://github.com/UTS-AnimalLogicAcademy/turret_lib), ready to convert and respond with the appropriate file path. We run turret as a linux service on each artist work station. This helps to lower latency and decentralize hosting requirements. 
 
 ## Building
 We use the [rez](https://github.com/nerdvegas/rez) build system at utsala, with the correct pacakge requirements, building this with rez should work straight out of the box.
@@ -7,7 +7,7 @@ We use the [rez](https://github.com/nerdvegas/rez) build system at utsala, with 
 Outside of rez, having the required software installed and correctly located in the `PATH` and `PYTHONPATH` environment variables should suffice.
 
 ### Requirements
- * turret_resolver
+ * [turret_resolver](https://github.com/UTS-AnimalLogicAcademy/turret_resolver)
  * pyzmq-16.0.3
  * Python 3 - for asyncio
 
